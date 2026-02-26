@@ -1,21 +1,28 @@
 package com.example.myapplication
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.webkit.WebChromeClient
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
-import com.example.myapplication.R
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
 
-    @SuppressLint("SetJavaScriptEnabled")
+    inner class AndroidBridge {
+        @JavascriptInterface
+        fun dial(phone: String) {
+            val intent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:$phone")
+            }
+            startActivity(intent)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -24,16 +31,15 @@ class MainActivity : AppCompatActivity() {
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.settings.allowFileAccess = true
 
-        webView.webChromeClient = WebChromeClient()
+        // Мост для вызова из JS: AndroidBridge.dial("...")
+        webView.addJavascriptInterface(AndroidBridge(), "AndroidBridge")
 
+        // На всякий случай оставляем обработку tel:/mailto:
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): Boolean {
-                val url = request?.url?.toString() ?: return false
+
+            private fun handleUrl(url: String?): Boolean {
+                if (url.isNullOrBlank()) return false
 
                 return when {
                     url.startsWith("tel:") -> {
@@ -47,14 +53,21 @@ class MainActivity : AppCompatActivity() {
                     else -> false
                 }
             }
+
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                return handleUrl(request.url.toString())
+            }
+
+            override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+                return handleUrl(url)
+            }
         }
 
         webView.loadUrl("file:///android_asset/index.html")
     }
 
-    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (webView.canGoBack()) webView.goBack()
+        if (::webView.isInitialized && webView.canGoBack()) webView.goBack()
         else super.onBackPressed()
     }
 }
