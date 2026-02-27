@@ -2320,6 +2320,47 @@
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> Войти
                 </button>
                 <button class="btn btn-soft" type="button" id="smsLoginBtn">Войти по SMS</button>
+                <button class="btn btn-ghost" type="button" data-open-modal="register">Регистрация</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Регистрация
+     ========================================================= -->
+<div class="modal" id="registerModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
+    <div class="modal__dialog">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="registerTitle">Регистрация</h3>
+                <p class="modal__sub">Создайте аккаунт: имя, телефон и пароль.</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <form id="registerForm" style="display:grid; gap:12px;" novalidate>
+                <div class="field">
+                    <label for="registerName">Имя</label>
+                    <input id="registerName" type="text" placeholder="Как к вам обращаться" required />
+                </div>
+                <div class="field">
+                    <label for="registerPhone">Телефон</label>
+                    <input id="registerPhone" type="tel" placeholder="+7 (___) ___-__-__" required />
+                </div>
+                <div class="field">
+                    <label for="registerPass">Пароль</label>
+                    <input id="registerPass" type="password" placeholder="Минимум 6 символов" required />
+                </div>
+                <div class="field">
+                    <label for="registerPassConfirm">Подтвердите пароль</label>
+                    <input id="registerPassConfirm" type="password" placeholder="Повторите пароль" required />
+                </div>
+                <button class="btn btn-teal" type="submit">
+                    <i class="fa-solid fa-user-plus"></i> Зарегистрироваться
+                </button>
             </form>
         </div>
     </div>
@@ -2495,7 +2536,8 @@
         checklist: "of_checklist_v2",
         mood: "of_mood_v1",
         a11y: "of_a11y_v1",
-        simple: "of_simple_v1"
+        simple: "of_simple_v1",
+        users: "of_users_v1"
       };
 
       /* ------------------------------
@@ -2619,6 +2661,7 @@
       const openLoginBtn = document.getElementById("openLoginBtn");
       const loginForm = document.getElementById("loginForm");
       const smsLoginBtn = document.getElementById("smsLoginBtn");
+      const registerForm = document.getElementById("registerForm");
 
       const clinicForm = document.getElementById("clinicForm");
       const relativeForm = document.getElementById("relativeForm");
@@ -2985,12 +3028,26 @@
       function getModalByKey(key){
         const map = {
           login: document.getElementById("loginModal"),
+          register: document.getElementById("registerModal"),
           panic: document.getElementById("panicModal"),
           video: document.getElementById("videoModal"),
           clinic: document.getElementById("clinicModal"),
           relative: document.getElementById("relativeModal")
         };
         return map[key] || null;
+      }
+
+      function normalizePhone(phone){
+        return String(phone || "").replace(/\D/g, "");
+      }
+
+      function readUsers(){
+        const users = safeParse(localStorage.getItem(LS.users), []);
+        return Array.isArray(users) ? users : [];
+      }
+
+      function saveUsers(users){
+        localStorage.setItem(LS.users, JSON.stringify(users));
       }
 
       function openModal(modal){
@@ -3051,10 +3108,66 @@
           showToast("Заполните телефон и пароль.");
           return;
         }
-        showToast("Демо-вход выполнен.");
+        const phoneDigits = normalizePhone(phone);
+        const users = readUsers();
+        const currentUser = users.find((u)=>u.phone===phoneDigits && u.pass===pass);
+
+        if (!currentUser){
+          showToast("Пользователь не найден. Сначала зарегистрируйтесь.");
+          return;
+        }
+
+        showToast(`Вход выполнен. Добро пожаловать, ${currentUser.name}!`);
         closeModal(getModalByKey("login"));
+        loginForm.reset();
       });
       smsLoginBtn.addEventListener("click", ()=>showToast("Войти по SMS: демо-режим."));
+
+      registerForm.addEventListener("submit", (e)=>{
+        e.preventDefault();
+        const name = document.getElementById("registerName").value.trim();
+        const phone = document.getElementById("registerPhone").value.trim();
+        const pass = document.getElementById("registerPass").value.trim();
+        const passConfirm = document.getElementById("registerPassConfirm").value.trim();
+        const phoneDigits = normalizePhone(phone);
+
+        if (!name || !phone || !pass || !passConfirm){
+          showToast("Заполните все поля регистрации.");
+          return;
+        }
+
+        if (phoneDigits.length < 11){
+          showToast("Введите корректный номер телефона.");
+          return;
+        }
+
+        if (pass.length < 6){
+          showToast("Пароль должен быть не короче 6 символов.");
+          return;
+        }
+
+        if (pass !== passConfirm){
+          showToast("Пароли не совпадают.");
+          return;
+        }
+
+        const users = readUsers();
+        const alreadyExists = users.some((u)=>u.phone===phoneDigits);
+        if (alreadyExists){
+          showToast("Пользователь с этим номером уже зарегистрирован.");
+          return;
+        }
+
+        users.push({ name, phone: phoneDigits, pass });
+        saveUsers(users);
+        showToast("Регистрация успешна. Теперь можно войти.");
+
+        document.getElementById("loginPhone").value = phone;
+        document.getElementById("loginPass").value = "";
+        registerForm.reset();
+        closeModal(getModalByKey("register"));
+        openModal(getModalByKey("login"));
+      });
 
       /* =========================================================
          КЛИНИКА: валидация ИНН/СНИЛС + отправка
