@@ -3,73 +3,168 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Окулус-Фельдшер — цифровая предоперационная подготовка</title>
+  <title>Окулус‑Фельдшер — цифровая подготовка к операции</title>
+  <meta name="description" content="Платформа для районного врача, хирурга и пациента: чек-листы, валидация, статусы, расчёт ИОЛ и офлайн-очередь." />
   <style>
     :root {
-      --bg: #f4f7fb;
-      --card: #ffffff;
-      --line: #d9e2ef;
-      --text: #1f2a3d;
-      --muted: #5b6b82;
-      --primary: #1f5fa8;
-      --success: #1f9d55;
-      --warning: #b57f00;
+      --white: #fff;
+      --bg: #f3fbfa;
+      --line: rgba(42, 169, 163, 0.24);
+      --line-soft: rgba(42, 169, 163, 0.14);
+      --text: #26455a;
+      --muted: #5c7688;
+      --teal-1: #40e0d0;
+      --teal-2: #2aa9a3;
       --danger: #b42318;
+      --warning: #b57f00;
+      --success: #1f9d55;
+      --shadow: 0 20px 44px -18px rgba(42, 169, 163, 0.35);
+      --radius: 20px;
     }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
+      font-family: "Segoe UI", "Nunito", Arial, sans-serif;
       color: var(--text);
-      background: var(--bg);
+      background: linear-gradient(180deg, #ffffff 0%, #f4fbff 42%, #eef8f7 100%);
       font-size: 17px;
     }
-    .container { max-width: 1260px; margin: 0 auto; padding: 16px; }
+
+    .container {
+      width: min(1240px, calc(100% - 24px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--line-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .header-inner {
+      min-height: 78px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand {
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--teal-1), var(--teal-2));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow);
+      font-size: 1.05rem;
+    }
+
+    .btn {
+      cursor: pointer;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      min-height: 44px;
+      padding: 10px 16px;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal-1), var(--teal-2));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-ghost {
+      background: #fff;
+      color: var(--teal-2);
+      border-color: var(--line);
+    }
+
+    .hero {
+      margin-top: 14px;
+      padding: 22px;
+      border: 1px solid var(--line-soft);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      background: radial-gradient(circle at 20% 20%, rgba(64,224,208,.2), transparent 48%), #fff;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.5rem);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 900px;
+    }
+
+    .app-shell {
+      margin: 16px 0 26px;
+      border-radius: 24px;
+      border: 1px solid var(--line-soft);
+      background: var(--bg);
+      padding: 14px;
+    }
+
     .topbar {
-      background: var(--card);
+      background: #fff;
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 14px;
+      padding: 12px;
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
       justify-content: space-between;
     }
-    .title { font-size: 1.35rem; font-weight: 700; }
-    .subtitle { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
+
+    .title { font-size: 1.2rem; font-weight: 800; }
+    .subtitle { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
     .roles { display: flex; gap: 8px; flex-wrap: wrap; }
-    button, select, input, textarea {
-      font: inherit;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      background: #fff;
-    }
-    button { cursor: pointer; }
-    .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
-    .btn-outline { background: #fff; color: var(--primary); }
-    .active-role { outline: 3px solid #c6daf6; }
+    .active-role { outline: 3px solid rgba(42,169,163,.25); }
 
     .grid { display: grid; gap: 14px; margin-top: 14px; }
     .grid-2 { grid-template-columns: 1.3fr 1fr; }
+
     .card {
-      background: var(--card);
+      background: #fff;
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: var(--radius);
       padding: 14px;
     }
-    .card h2, .card h3 { margin: 0 0 10px; font-size: 1.08rem; }
-    .badge { padding: 5px 10px; border-radius: 999px; color: white; font-weight: 700; display: inline-flex; }
+
+    .card h2, .card h3 { margin: 0 0 10px; font-size: 1.05rem; }
+    .badge { padding: 5px 10px; border-radius: 999px; color: #fff; font-weight: 700; display: inline-flex; }
     .red { background: var(--danger); }
     .yellow { background: var(--warning); }
     .green { background: var(--success); }
 
     table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-    th, td { border-bottom: 1px solid var(--line); text-align: left; padding: 8px 6px; vertical-align: top; }
+    th, td { border-bottom: 1px solid var(--line-soft); text-align: left; padding: 8px 6px; vertical-align: top; }
     th { color: var(--muted); font-weight: 600; }
 
-    .check-item { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+    .check-item { border: 1px solid var(--line-soft); border-radius: 10px; padding: 10px; margin-bottom: 8px; background: #fcffff; }
     .check-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .muted { color: var(--muted); }
     .small { font-size: 0.87rem; }
@@ -77,41 +172,86 @@
     .field-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-bottom: 8px; }
     .field-row-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
 
+    input, textarea {
+      width: 100%;
+      font: inherit;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
     .pill {
-      display: inline-flex; align-items: center; gap: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       border: 1px dashed var(--line);
-      padding: 8px 10px; border-radius: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #fff;
     }
 
     .timeline { list-style: none; padding: 0; margin: 0; }
-    .timeline li { padding: 10px; border-left: 4px solid #c4d4eb; background: #f9fbff; margin-bottom: 8px; border-radius: 8px; }
+    .timeline li { padding: 10px; border-left: 4px solid #9dc7cc; background: #f5feff; margin-bottom: 8px; border-radius: 8px; }
+
+    .site-footer {
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.92rem;
+      padding: 0 0 18px;
+    }
 
     @media (max-width: 980px) {
       .grid-2 { grid-template-columns: 1fr; }
       .field-row, .field-row-4 { grid-template-columns: 1fr; }
       body { font-size: 18px; }
-      button, select, input, textarea { min-height: 44px; }
+      .btn, input, textarea { min-height: 44px; }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <header class="topbar">
-    <div>
-      <div class="title">Окулус-Фельдшер</div>
-      <div class="subtitle">Удаленная подготовка к офтальмологическим операциям между районами и областным центром</div>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand">
+      <div class="brand-badge">👁️</div>
+      <div>
+        Окулус‑Фельдшер
+        <div class="subtitle">Региональная цифровая подготовка к операции</div>
+      </div>
     </div>
-    <div class="roles">
-      <button id="roleF" class="btn-outline">Роль: Фельдшер</button>
-      <button id="roleS" class="btn-outline">Роль: Хирург</button>
-      <button id="roleP" class="btn-outline">Роль: Пациент</button>
-    </div>
-  </header>
+    <button id="jumpToApp" class="btn btn-primary">Открыть рабочий кабинет</button>
+  </div>
+</header>
 
-  <section id="viewF" class="grid grid-2"></section>
-  <section id="viewS" class="grid" style="display:none"></section>
-  <section id="viewP" class="grid" style="display:none"></section>
-</div>
+<main class="container">
+  <section class="hero">
+    <h1>Подготовка пациента без лишних поездок в областной центр</h1>
+    <p>
+      Версия адаптирована под ваш сайт: медицинский стиль, крупные контрастные элементы, таблицы и чек‑листы.
+      Внутри — роли фельдшера, хирурга и пациента, расчёт ИОЛ, статусы, комментарии и офлайн‑очередь синхронизации.
+    </p>
+  </section>
+
+  <section id="appRoot" class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="title">Окулус‑Фельдшер — рабочий контур MVP</div>
+        <div class="subtitle">Роль выбирается справа. Данные сохраняются в localStorage для офлайн‑поведения.</div>
+      </div>
+      <div class="roles">
+        <button id="roleF" class="btn btn-ghost">Фельдшер</button>
+        <button id="roleS" class="btn btn-ghost">Хирург</button>
+        <button id="roleP" class="btn btn-ghost">Пациент</button>
+      </div>
+    </header>
+
+    <section id="viewF" class="grid grid-2"></section>
+    <section id="viewS" class="grid" style="display:none"></section>
+    <section id="viewP" class="grid" style="display:none"></section>
+  </section>
+</main>
+
+<footer class="site-footer">© <span id="year"></span> Окулус‑Фельдшер</footer>
 
 <script>
 (() => {
@@ -144,28 +284,31 @@
 
   const badge = (status) => `<span class="badge ${status}">${status === "red" ? "Красный" : status === "yellow" ? "Желтый" : "Зеленый"}</span>`;
   const getPatient = () => state.patients.find(p => p.id === state.selectedPatient) || state.patients[0];
-  const statusFromChecklist = (p) => {
-    const items = operationTemplates[p.operation] || [];
-    const done = items.filter(i => p.checklist[i]).length;
+
+  const statusFromChecklist = (patient) => {
+    const items = operationTemplates[patient.operation] || [];
+    const done = items.filter(i => patient.checklist[i]).length;
     if (done === items.length && done > 0) return "green";
     if (done === 0) return "red";
     return "yellow";
   };
 
-  function calcIOL({k1,k2,acd,axial,aConst}) {
+  function calcIOL({k1, k2, acd, axial, aConst}) {
     const meanK = (k1 + k2) / 2;
     const srkT = aConst - 2.5 * axial - 0.9 * meanK;
     const haigis = (0.1 * (aConst - 118)) + (0.4 * acd) - (2.2 * axial) + 95 - meanK;
     return { srkT: srkT.toFixed(2), haigis: haigis.toFixed(2) };
   }
 
-  function queueOrApply(action) {
+  function queueOrApply(action, title) {
     if (state.online) {
       action();
     } else {
-      state.offlineQueue.push({ ts: Date.now(), action: action.toString() });
+      state.offlineQueue.push({ ts: Date.now(), label: title || "update" });
+      action();
     }
-    save(); render();
+    save();
+    render();
   }
 
   function syncQueue() {
@@ -184,11 +327,11 @@
         <h2>Панель районного офтальмолога</h2>
         <div class="pill small">Сеть: <b>${state.online ? "онлайн" : "оффлайн"}</b>. Несинхронизированных изменений: <b>${state.offlineQueue.length}</b></div>
         <table>
-          <thead><tr><th>ID</th><th>ФИО</th><th>Район</th><th>Диагноз МКБ-10</th><th>Статус</th></tr></thead>
+          <thead><tr><th>ID</th><th>ФИО</th><th>Район</th><th>МКБ‑10</th><th>Статус</th></tr></thead>
           <tbody>
             ${state.patients.map(row => `
               <tr>
-                <td><button data-pid="${row.id}" class="btn-outline small">${row.id}</button></td>
+                <td><button data-pid="${row.id}" class="btn btn-ghost">${row.id}</button></td>
                 <td>${row.fio}</td>
                 <td>${row.district}</td>
                 <td>${row.diagnosis}</td>
@@ -202,11 +345,12 @@
         <h2>Карточка пациента ${p.fio}</h2>
         <div class="field-row small">
           <div><b>СНИЛС:</b> ${p.snils}</div>
-          <div><b>Полис (ЕМИАС-заглушка):</b> ${p.policy}</div>
+          <div><b>Полис (ЕМИАС‑заглушка):</b> ${p.policy}</div>
           <div><b>Тип операции:</b> ${p.operation}</div>
           <div><b>Комментарий хирурга:</b> ${p.surgeonComment || "—"}</div>
         </div>
-        <h3>Чек-лист подготовки</h3>
+
+        <h3>Чек‑лист подготовки</h3>
         ${template.map(item => `
           <div class="check-item">
             <div class="check-head">
@@ -224,17 +368,10 @@
           <input id="axial" placeholder="Осевая длина" type="number" step="0.01" />
         </div>
         <div class="field-row small" style="margin-top:8px;">
-          <input id="aconst" placeholder="A-constant" type="number" step="0.01" value="118.4" />
-          <button id="calcIol" class="btn-primary">Рассчитать SRK/T и Haigis</button>
+          <input id="aconst" placeholder="A‑constant" type="number" step="0.01" value="118.4" />
+          <button id="calcIol" class="btn btn-primary">Рассчитать SRK/T и Haigis</button>
         </div>
         <div class="small" id="iolResult">${p.iol ? `SRK/T: <b>${p.iol.srkT} D</b>, Haigis: <b>${p.iol.haigis} D</b>` : "Расчет пока не выполнен"}</div>
-
-        <h3>Мультимедиа + интеграции</h3>
-        <div class="small muted">Фото щелевой лампы / глазного дна / кератотопограмма: загружаются как файлы в чек-листе. DICOM-подобные данные помечаются как "сжато" (MVP-симуляция).</div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="compressMedia" class="btn-outline">Оптимизировать тяжелые снимки</button>
-          <button id="sendToEhr" class="btn-outline">Отправить в ЕМИАС/РИАМС (заглушка)</button>
-        </div>
       </div>
     `;
 
@@ -245,27 +382,29 @@
         p.checklist[item] = el.checked;
         p.status = statusFromChecklist(p);
         p.stage = p.status === "green" ? 2 : p.status === "yellow" ? 2 : 1;
-      });
+      }, "checklist");
     });
     container.querySelectorAll("[data-file]").forEach(el => el.onchange = () => {
       const item = el.dataset.file;
-      queueOrApply(() => { p.files[item] = el.value.trim(); });
+      queueOrApply(() => { p.files[item] = el.value.trim(); }, "file");
     });
+
     document.getElementById("calcIol").onclick = () => {
       const k1 = parseFloat(document.getElementById("k1").value);
       const k2 = parseFloat(document.getElementById("k2").value);
       const acd = parseFloat(document.getElementById("acd").value);
       const axial = parseFloat(document.getElementById("axial").value);
       const aConst = parseFloat(document.getElementById("aconst").value);
-      if ([k1,k2,acd,axial,aConst].some(v => Number.isNaN(v))) { alert("Заполните параметры глаза"); return; }
+      if ([k1, k2, acd, axial, aConst].some(v => Number.isNaN(v))) {
+        alert("Заполните параметры глаза");
+        return;
+      }
       queueOrApply(() => {
-        p.iol = calcIOL({k1,k2,acd,axial,aConst});
+        p.iol = calcIOL({k1, k2, acd, axial, aConst});
         p.checklist["Расчет ИОЛ"] = true;
         p.status = statusFromChecklist(p);
-      });
+      }, "iol");
     };
-    document.getElementById("compressMedia").onclick = () => alert("MVP: тяжелые изображения отмечены как оптимизированные для слабого канала связи.");
-    document.getElementById("sendToEhr").onclick = () => alert("MVP: данные отправлены в ЕМИАС/РИАМС через интеграционный шлюз (заглушка).\nFHIR поля patient.identifier, condition.code, procedure.code подготовлены.");
   }
 
   function renderS() {
@@ -284,8 +423,8 @@
                 <td>${badge(p.status)}</td>
                 <td><input data-date="${p.id}" type="date" value="${p.surgeryDate || ""}" /></td>
                 <td>
-                  <button class="btn-primary" data-ok="${p.id}">Подтвердить готовность</button>
-                  <button class="btn-outline" data-req="${p.id}">Запросить дообследование</button>
+                  <button class="btn btn-primary" data-ok="${p.id}">Подтвердить</button>
+                  <button class="btn btn-ghost" data-req="${p.id}">Дообследование</button>
                 </td>
               </tr>
               <tr><td colspan="6"><textarea data-comment="${p.id}" placeholder="Комментарий районному коллеге">${p.surgeonComment || ""}</textarea></td></tr>
@@ -296,19 +435,27 @@
 
     container.querySelectorAll("[data-date]").forEach(el => el.onchange = () => {
       const p = state.patients.find(x => x.id === el.dataset.date);
-      queueOrApply(() => { p.surgeryDate = el.value; if (el.value) p.stage = 3; });
+      queueOrApply(() => { p.surgeryDate = el.value; if (el.value) p.stage = 3; }, "date");
     });
     container.querySelectorAll("[data-comment]").forEach(el => el.onchange = () => {
       const p = state.patients.find(x => x.id === el.dataset.comment);
-      queueOrApply(() => { p.surgeonComment = el.value; });
+      queueOrApply(() => { p.surgeonComment = el.value; }, "comment");
     });
     container.querySelectorAll("[data-ok]").forEach(el => el.onclick = () => {
       const p = state.patients.find(x => x.id === el.dataset.ok);
-      queueOrApply(() => { p.status = "green"; p.stage = 3; if (!p.surgeryDate) p.surgeryDate = new Date(Date.now()+1000*3600*24*14).toISOString().slice(0,10); });
+      queueOrApply(() => {
+        p.status = "green";
+        p.stage = 3;
+        if (!p.surgeryDate) p.surgeryDate = new Date(Date.now() + 1000 * 3600 * 24 * 14).toISOString().slice(0, 10);
+      }, "approve");
     });
     container.querySelectorAll("[data-req]").forEach(el => el.onclick = () => {
       const p = state.patients.find(x => x.id === el.dataset.req);
-      queueOrApply(() => { p.status = "red"; p.stage = 1; if (!p.surgeonComment) p.surgeonComment = "Требуется дополнительная консультация."; });
+      queueOrApply(() => {
+        p.status = "red";
+        p.stage = 1;
+        if (!p.surgeonComment) p.surgeonComment = "Требуется дополнительная консультация.";
+      }, "reject");
     });
   }
 
@@ -325,22 +472,22 @@
           <li><b>Этап 2:</b> Проверка хирургом — ${p.stage > 2 ? "завершено" : "ожидание"}</li>
           <li><b>Этап 3:</b> Операция ${p.surgeryDate ? "назначена на " + p.surgeryDate : "еще не назначена"}</li>
         </ul>
-        <div class="small muted">Telegram-бот (заглушка): отправляет напоминания «Завтра сдать кровь натощак» и уведомления об изменении статуса.</div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="tgPing" class="btn-primary">Проверить уведомление Telegram</button>
-          <button id="printRoute" class="btn-outline">Сформировать лист маршрутизации</button>
-          <button id="videoCall" class="btn-outline">Запуск видеоконсультации (WebRTC-заглушка)</button>
+        <div class="small muted">Telegram‑бот и видеоконсультация подключаются как внешние модули (MVP‑заглушка).</div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="tgPing" class="btn btn-primary">Проверить Telegram</button>
+          <button id="printRoute" class="btn btn-ghost">Печать маршрутизации</button>
         </div>
       </div>
     `;
 
-    document.getElementById("tgPing").onclick = () => alert("Telegram: Напоминание отправлено пациенту.");
+    document.getElementById("tgPing").onclick = () => alert("Telegram: напоминание отправлено пациенту.");
     document.getElementById("printRoute").onclick = () => {
-      const route = `Лист маршрутизации\\nПациент: ${p.fio}\\nОперация: ${p.operation}\\nСтатус: ${p.status}\\nДата операции: ${p.surgeryDate || "не назначена"}`;
+      const route = `Лист маршрутизации\nПациент: ${p.fio}\nОперация: ${p.operation}\nСтатус: ${p.status}\nДата операции: ${p.surgeryDate || "не назначена"}`;
       const w = window.open("", "_blank");
-      w.document.write(`<pre>${route}</pre>`); w.print();
+      if (!w) return;
+      w.document.write(`<pre>${route}</pre>`);
+      w.print();
     };
-    document.getElementById("videoCall").onclick = () => alert("MVP: вызов через встроенный мессенджер/WebRTC инициирован (заглушка).");
   }
 
   function render() {
@@ -360,10 +507,12 @@
   document.getElementById("roleF").onclick = () => { state.role = "f"; save(); render(); };
   document.getElementById("roleS").onclick = () => { state.role = "s"; save(); render(); };
   document.getElementById("roleP").onclick = () => { state.role = "p"; save(); render(); };
+  document.getElementById("jumpToApp").onclick = () => document.getElementById("appRoot").scrollIntoView({ behavior: "smooth" });
 
   window.addEventListener("online", () => { state.online = true; syncQueue(); render(); });
   window.addEventListener("offline", () => { state.online = false; save(); render(); });
 
+  document.getElementById("year").textContent = new Date().getFullYear();
   render();
 })();
 </script>
