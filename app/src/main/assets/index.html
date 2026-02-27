@@ -2778,6 +2778,10 @@
         if (savedSession && typeof savedSession === "object") {
           sessionState = { ...sessionState, ...savedSession };
         }
+        // На каждом новом запуске просим вход снова:
+        // учетная запись сохраняется, но сессия подтверждается пользователем.
+        sessionState.loggedIn = false;
+        saveSession();
 
         const savedTgConfig = safeParse(localStorage.getItem(LS.tgConfig), null);
         if (savedTgConfig && typeof savedTgConfig === "object") {
