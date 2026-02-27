@@ -2468,6 +2468,65 @@
     </div>
 </div>
 
+
+<!-- =========================================================
+     MODAL: Telegram напоминания (реальная интеграция Bot API)
+     ========================================================= -->
+<div class="modal" id="telegramModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="telegramTitle">
+    <div class="modal__dialog" style="width:min(760px,100%);">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="telegramTitle">🤖 Telegram-напоминания</h3>
+                <p class="modal__sub">Подключите @oculusmdbot и настройте реальные напоминания пациенту.</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <div class="card" style="padding:14px;border-radius:20px;border:1px solid var(--line);box-shadow:none;margin-bottom:12px;">
+                <div class="field" style="margin-bottom:10px;">
+                    <label for="tgBotToken">Bot Token</label>
+                    <input id="tgBotToken" type="text" placeholder="123456:ABC..." />
+                </div>
+                <div class="field" style="margin-bottom:10px;">
+                    <label for="tgChatId">Chat ID пациента</label>
+                    <input id="tgChatId" type="text" inputmode="numeric" placeholder="например: 123456789" />
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-soft" type="button" id="tgDetectChatBtn">🔎 Найти chat_id из getUpdates</button>
+                    <button class="btn btn-teal" type="button" id="tgTestBtn">📩 Отправить тест</button>
+                    <button class="btn btn-ghost" type="button" id="tgSaveConfigBtn">💾 Сохранить подключение</button>
+                </div>
+                <p class="note" style="margin-top:10px;">Шаги: 1) Напишите боту <b>/start</b> в Telegram. 2) Нажмите «Найти chat_id». 3) Включите напоминания.</p>
+            </div>
+
+            <form id="tgReminderForm" style="display:grid;gap:10px;">
+                <div class="field">
+                    <label for="tgReminderText">Текст напоминания</label>
+                    <input id="tgReminderText" type="text" maxlength="300" placeholder="Завтра в 08:00 сдайте кровь натощак" required />
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="field">
+                        <label for="tgReminderAt">Дата и время отправки</label>
+                        <input id="tgReminderAt" type="datetime-local" required />
+                    </div>
+                    <div class="field">
+                        <label for="tgReminderRepeat">Повтор (мин)</label>
+                        <input id="tgReminderRepeat" type="number" min="0" step="5" value="0" />
+                    </div>
+                </div>
+                <button class="btn btn-teal" type="submit">⏰ Добавить напоминание</button>
+            </form>
+
+            <div class="card" style="margin-top:12px;padding:12px;border-radius:18px;box-shadow:none;">
+                <strong style="display:block;margin-bottom:8px;">📋 Активные напоминания</strong>
+                <div id="tgReminderList" class="small muted">Пока нет запланированных напоминаний.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -2495,7 +2554,9 @@
         checklist: "of_checklist_v2",
         mood: "of_mood_v1",
         a11y: "of_a11y_v1",
-        simple: "of_simple_v1"
+        simple: "of_simple_v1",
+        tgConfig: "of_tg_config_v1",
+        tgReminders: "of_tg_reminders_v1"
       };
 
       /* ------------------------------
@@ -2623,11 +2684,30 @@
       const clinicForm = document.getElementById("clinicForm");
       const relativeForm = document.getElementById("relativeForm");
 
+      // Telegram reminders
+      const tgBotToken = document.getElementById("tgBotToken");
+      const tgChatId = document.getElementById("tgChatId");
+      const tgDetectChatBtn = document.getElementById("tgDetectChatBtn");
+      const tgTestBtn = document.getElementById("tgTestBtn");
+      const tgSaveConfigBtn = document.getElementById("tgSaveConfigBtn");
+      const tgReminderForm = document.getElementById("tgReminderForm");
+      const tgReminderText = document.getElementById("tgReminderText");
+      const tgReminderAt = document.getElementById("tgReminderAt");
+      const tgReminderRepeat = document.getElementById("tgReminderRepeat");
+      const tgReminderList = document.getElementById("tgReminderList");
+
       /* ------------------------------
          STATE (localStorage)
          ------------------------------ */
       let prepState = { completedCount: 1, previewIndex: 1 }; // приятный старт
       let checklistState = {}; // { stepId: [true/false...] }
+      let tgConfig = {
+        token: "8065093499:AAGekp349z5hUCGuUWUDQeCzz_ZgvOLHv2U",
+        chatId: "",
+        botUsername: "@oculusmdbot"
+      };
+      let tgReminders = [];
+      let tgReminderTimer = null;
 
       function safeParse(v, fallback){
         try{ return JSON.parse(v) ?? fallback; }catch{ return fallback; }
@@ -2657,10 +2737,26 @@
         const simpleOn = localStorage.getItem(LS.simple)==="1";
         document.body.classList.toggle("simple-mode", simpleOn);
         toggleSimpleBtn.setAttribute("aria-pressed", String(simpleOn));
+
+        const savedTgConfig = safeParse(localStorage.getItem(LS.tgConfig), null);
+        if (savedTgConfig && typeof savedTgConfig === "object") {
+          tgConfig = { ...tgConfig, ...savedTgConfig };
+        }
+
+        const savedReminders = safeParse(localStorage.getItem(LS.tgReminders), null);
+        if (Array.isArray(savedReminders)) {
+          tgReminders = savedReminders;
+        }
+
+        if (tgBotToken) tgBotToken.value = tgConfig.token || "";
+        if (tgChatId) tgChatId.value = tgConfig.chatId || "";
+        renderTelegramReminders();
       }
 
       function savePrep(){ localStorage.setItem(LS.prep, JSON.stringify(prepState)); }
       function saveChecklist(){ localStorage.setItem(LS.checklist, JSON.stringify(checklistState)); }
+      function saveTelegramConfig(){ localStorage.setItem(LS.tgConfig, JSON.stringify(tgConfig)); }
+      function saveTelegramReminders(){ localStorage.setItem(LS.tgReminders, JSON.stringify(tgReminders)); }
 
       /* ------------------------------
          TOAST
@@ -2988,7 +3084,8 @@
           panic: document.getElementById("panicModal"),
           video: document.getElementById("videoModal"),
           clinic: document.getElementById("clinicModal"),
-          relative: document.getElementById("relativeModal")
+          relative: document.getElementById("relativeModal"),
+          telegram: document.getElementById("telegramModal")
         };
         return map[key] || null;
       }
@@ -3216,7 +3313,7 @@
       fabVideoBtn.addEventListener("click", ()=>{ toggleFab(false); openModal(getModalByKey("video")); });
       openVideoFromHero.addEventListener("click", ()=>openModal(getModalByKey("video")));
 
-      fabReminderBtn.addEventListener("click", ()=>{ toggleFab(false); showToast("Напоминания: демо. Можно подключить SMS/push."); });
+      fabReminderBtn.addEventListener("click", ()=>{ toggleFab(false); openModal(getModalByKey("telegram")); });
 
       /* =========================================================
          Чат-бот по ключевым словам
@@ -3260,6 +3357,148 @@
       sendChatBtn.addEventListener("click", sendChat);
       chatInput.addEventListener("keydown",(e)=>{
         if (e.key === "Enter") sendChat();
+      });
+
+      /* =========================================================
+         TELEGRAM BOT: реальные напоминания
+         ========================================================= */
+      function telegramApi(method, payload){
+        const token = (tgBotToken?.value || tgConfig.token || "").trim();
+        if (!token) throw new Error("Укажите токен Telegram-бота");
+        return fetch(`https://api.telegram.org/bot${token}/${method}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload || {})
+        }).then(async (r)=>{
+          const data = await r.json().catch(()=>({ok:false, description:"Некорректный ответ Telegram"}));
+          if (!r.ok || !data.ok) throw new Error(data.description || "Ошибка Telegram API");
+          return data.result;
+        });
+      }
+
+      function renderTelegramReminders(){
+        if (!tgReminderList) return;
+        if (!tgReminders.length){
+          tgReminderList.textContent = "Пока нет запланированных напоминаний.";
+          return;
+        }
+        tgReminderList.innerHTML = tgReminders
+          .sort((a,b)=>a.at-b.at)
+          .map((r)=>{
+            const dt = new Date(r.at).toLocaleString("ru-RU");
+            const repeat = r.repeatMin > 0 ? ` · повтор: каждые ${r.repeatMin} мин` : "";
+            return `<div style="border:1px solid var(--line-soft);border-radius:12px;padding:8px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+              <div><b>${r.text}</b><div class="small muted">${dt}${repeat}</div></div>
+              <button class="btn btn-ghost" type="button" data-del-reminder="${r.id}" style="min-height:36px;padding:6px 10px;">Удалить</button>
+            </div>`;
+          }).join("");
+      }
+
+      async function sendTelegramReminder(reminder){
+        const chatId = (tgChatId?.value || tgConfig.chatId || "").trim();
+        if (!chatId) throw new Error("Укажите chat_id пациента");
+        const text = `👁️ Oculus MD
+${reminder.text}`;
+        await telegramApi("sendMessage", { chat_id: chatId, text });
+      }
+
+      function startTelegramReminderWorker(){
+        if (tgReminderTimer) clearInterval(tgReminderTimer);
+        tgReminderTimer = setInterval(async ()=>{
+          if (!tgReminders.length) return;
+          const now = Date.now();
+          for (const rem of tgReminders){
+            if (rem.at <= now){
+              try {
+                await sendTelegramReminder(rem);
+                if (rem.repeatMin > 0){
+                  rem.at = now + rem.repeatMin * 60 * 1000;
+                } else {
+                  rem.done = true;
+                }
+              } catch (e) {
+                rem.lastError = e.message;
+              }
+            }
+          }
+          tgReminders = tgReminders.filter(r => !r.done);
+          saveTelegramReminders();
+          renderTelegramReminders();
+        }, 30000);
+      }
+
+      tgSaveConfigBtn?.addEventListener("click", ()=>{
+        tgConfig.token = (tgBotToken.value || "").trim();
+        tgConfig.chatId = (tgChatId.value || "").trim();
+        saveTelegramConfig();
+        showToast("✅ Telegram подключение сохранено");
+      });
+
+      tgDetectChatBtn?.addEventListener("click", async ()=>{
+        try {
+          tgConfig.token = (tgBotToken.value || "").trim();
+          saveTelegramConfig();
+          const updates = await telegramApi("getUpdates", { timeout: 1, limit: 10 });
+          const msg = [...updates].reverse().find(u => u.message?.chat?.id);
+          if (!msg){
+            showToast("⚠️ Нет сообщений. Напишите боту /start и повторите.");
+            return;
+          }
+          const id = String(msg.message.chat.id);
+          tgChatId.value = id;
+          tgConfig.chatId = id;
+          saveTelegramConfig();
+          showToast(`✅ chat_id найден: ${id}`);
+        } catch (e) {
+          showToast(`❌ ${e.message}`);
+        }
+      });
+
+      tgTestBtn?.addEventListener("click", async ()=>{
+        try {
+          tgConfig.token = (tgBotToken.value || "").trim();
+          tgConfig.chatId = (tgChatId.value || "").trim();
+          saveTelegramConfig();
+          await telegramApi("sendMessage", {
+            chat_id: tgConfig.chatId,
+            text: "✅ Oculus MD: тестовое сообщение. Telegram-напоминания подключены."
+          });
+          showToast("📩 Тест отправлен в Telegram");
+        } catch (e) {
+          showToast(`❌ ${e.message}`);
+        }
+      });
+
+      tgReminderForm?.addEventListener("submit", (e)=>{
+        e.preventDefault();
+        const text = (tgReminderText.value || "").trim();
+        const atRaw = tgReminderAt.value;
+        const repeatMin = Math.max(0, Number(tgReminderRepeat.value || 0));
+        const at = new Date(atRaw).getTime();
+        if (!text || !atRaw || Number.isNaN(at)){
+          showToast("⚠️ Заполните текст и время напоминания");
+          return;
+        }
+        if (at < Date.now() - 10000){
+          showToast("⚠️ Время уже прошло");
+          return;
+        }
+        tgReminders.push({ id: `r_${Date.now()}`, text, at, repeatMin });
+        saveTelegramReminders();
+        renderTelegramReminders();
+        startTelegramReminderWorker();
+        tgReminderForm.reset();
+        showToast("✅ Напоминание добавлено");
+      });
+
+      tgReminderList?.addEventListener("click", (e)=>{
+        const btn = e.target.closest("[data-del-reminder]");
+        if (!btn) return;
+        const id = btn.getAttribute("data-del-reminder");
+        tgReminders = tgReminders.filter(r => r.id !== id);
+        saveTelegramReminders();
+        renderTelegramReminders();
+        showToast("🗑️ Напоминание удалено");
       });
 
       /* =========================================================
@@ -3370,6 +3609,7 @@
       yearEl.textContent = new Date().getFullYear();
       loadState();
       renderAll();
+      startTelegramReminderWorker();
 
       /* =========================================================
          Кнопки hero "видео/чат" уже привязаны.
