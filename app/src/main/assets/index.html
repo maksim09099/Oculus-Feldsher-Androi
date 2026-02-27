@@ -1,520 +1,3390 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Окулус‑Фельдшер — цифровая подготовка к операции</title>
-  <meta name="description" content="Платформа для районного врача, хирурга и пациента: чек-листы, валидация, статусы, расчёт ИОЛ и офлайн-очередь." />
-  <style>
-    :root {
-      --white: #fff;
-      --bg: #f3fbfa;
-      --line: rgba(42, 169, 163, 0.24);
-      --line-soft: rgba(42, 169, 163, 0.14);
-      --text: #26455a;
-      --muted: #5c7688;
-      --teal-1: #40e0d0;
-      --teal-2: #2aa9a3;
-      --danger: #b42318;
-      --warning: #b57f00;
-      --success: #1f9d55;
-      --shadow: 0 20px 44px -18px rgba(42, 169, 163, 0.35);
-      --radius: 20px;
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oculus MD — подготовка к операции</title>
+    <meta name="description" content="Oculus MD — цифровая платформа для спокойной подготовки пациентов к операции: шаги, напоминания, чат и поддержка." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+
+    <style>
+        /* =========================================================
+           БАЗА / ПАЛИТРА (teal + white + dark text)
+           ========================================================= */
+        :root{
+          --white:#fff;
+          --teal-1:#40E0D0;
+          --teal-2:#2AA9A3;
+          --teal-soft:#E0F7F5;
+          --text:#2D3E50;
+          --muted:#5E7288;
+          --line: rgba(42,169,163,.18);
+          --line-soft: rgba(42,169,163,.10);
+
+          --grad: linear-gradient(135deg,#40E0D0,#2AA9A3);
+          --shadow: 0 20px 40px -10px rgba(42,169,163,.20);
+          --shadow-sm: 0 12px 24px -12px rgba(42,169,163,.25);
+
+          --radius-card:24px;
+          --radius-pill:60px;
+
+          --container: 1180px;
+          --transition:.25s ease;
+
+          /* для диаграммы */
+          --donut-size: 110px;
+        }
+
+        *{ box-sizing:border-box; }
+        html{ scroll-behavior:smooth; }
+        body{
+          margin:0;
+          font-family:"Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+          color:var(--text);
+          background:var(--white);
+          font-size:18px;
+          line-height:1.55;
+          -webkit-font-smoothing: antialiased;
+          text-rendering: optimizeLegibility;
+        }
+        a{ color:inherit; text-decoration:none; }
+        button,input{ font:inherit; }
+        img{ max-width:100%; display:block; }
+
+        .container{ width:min(var(--container), calc(100% - 32px)); margin-inline:auto; }
+
+        .section{ padding:64px 0; }
+        .card{
+          background:var(--white);
+          border:1px solid var(--line-soft);
+          border-radius:var(--radius-card);
+          box-shadow:var(--shadow-sm);
+        }
+
+        /* =========================================================
+           КНОПКИ (крупные, округлые)
+           ========================================================= */
+        .btn{
+          border:0;
+          border-radius:var(--radius-pill);
+          padding:14px 22px;
+          min-height:52px;
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          gap:10px;
+          font-weight:800;
+          cursor:pointer;
+          transition: transform var(--transition), box-shadow var(--transition), background var(--transition), opacity var(--transition);
+          white-space:nowrap;
+        }
+        .btn:hover{ transform: translateY(-1px); }
+        .btn:focus-visible{
+          outline:3px solid rgba(64,224,208,.35);
+          outline-offset:2px;
+        }
+        .btn-teal{
+          color:var(--white);
+          background:var(--grad);
+          box-shadow:var(--shadow);
+        }
+        .btn-teal:hover{ box-shadow: 0 24px 42px -14px rgba(42,169,163,.30); }
+        .btn-ghost{
+          color:var(--text);
+          background:var(--white);
+          border:1px solid var(--line);
+          box-shadow:var(--shadow-sm);
+        }
+        .btn-soft{
+          color:var(--teal-2);
+          background:var(--teal-soft);
+          border:1px solid rgba(42,169,163,.14);
+          box-shadow:none;
+        }
+
+        .icon-btn{
+          width:52px; height:52px;
+          border-radius:999px;
+          border:1px solid var(--line);
+          background:var(--white);
+          display:grid;
+          place-items:center;
+          cursor:pointer;
+          box-shadow: 0 10px 18px -14px rgba(42,169,163,.35);
+          transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+        }
+        .icon-btn:hover{
+          transform: translateY(-1px);
+          box-shadow: 0 14px 24px -14px rgba(42,169,163,.40);
+          background:#fbfffe;
+        }
+        .icon-btn i{ color:var(--teal-2); }
+
+        /* =========================================================
+           HEADER (простой и понятный)
+           ========================================================= */
+        .site-header{
+          position:sticky; top:0; z-index:100;
+          background: rgba(255,255,255,.94);
+          backdrop-filter: blur(10px);
+          border-bottom:1px solid var(--line-soft);
+        }
+        .header-inner{
+          min-height:78px;
+          display:grid;
+          grid-template-columns:auto 1fr auto;
+          gap:14px;
+          align-items:center;
+          padding:12px 0;
+        }
+        .brand{
+          display:inline-flex; align-items:center; gap:12px;
+          font-weight:900; letter-spacing:-.02em;
+          min-width:0;
+        }
+        .brand__icon{
+          width:46px;height:46px;border-radius:16px;
+          display:grid;place-items:center;
+          background:var(--grad); color:var(--white);
+          box-shadow:var(--shadow-sm);
+          flex-shrink:0;
+        }
+        .brand__text{ line-height:1.05; font-size:1.15rem; }
+        .brand__text small{
+          display:block;
+          margin-top:4px;
+          color:var(--muted);
+          font-weight:800;
+          font-size:.8rem;
+          letter-spacing:0;
+        }
+
+        .header-center{
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap:12px;
+          min-width:0;
+        }
+        .phone-pill{
+          display:inline-flex; align-items:center; gap:10px;
+          padding:12px 18px;
+          border-radius:999px;
+          background:var(--teal-soft);
+          border:1px solid rgba(42,169,163,.16);
+          font-weight:900;
+          box-shadow: 0 8px 18px -12px rgba(42,169,163,.30);
+          white-space:nowrap;
+        }
+        .phone-pill i{ color:var(--teal-2); }
+
+        .header-actions{ display:flex; gap:10px; align-items:center; justify-content:flex-end; }
+
+        .header-mini-phone{ display:none; } /* на мобиле */
+        .nav-row{
+          border-top:1px solid var(--line-soft);
+        }
+        .nav-inner{
+          min-height:60px;
+          display:flex; align-items:center; justify-content:space-between; gap:12px;
+          position:relative;
+        }
+        .nav{
+          display:flex; gap:8px; flex-wrap:wrap;
+          align-items:center;
+        }
+        .nav a{
+          display:inline-flex; align-items:center; gap:8px;
+          padding:10px 14px;
+          border-radius:999px;
+          font-weight:800;
+          transition: background var(--transition), color var(--transition);
+        }
+        .nav a:hover{ background:var(--teal-soft); color:var(--teal-2); }
+        .nav a i{ font-size:.85rem; opacity:.8; }
+
+        .burger{
+          display:none;
+          width:52px;height:52px;border-radius:999px;
+          border:1px solid var(--line);
+          background:var(--white);
+          box-shadow:var(--shadow-sm);
+          cursor:pointer;
+          place-items:center;
+        }
+
+        /* =========================================================
+           HERO (без лишнего: приветствие + поиск + быстрые действия)
+           ========================================================= */
+        .hero-shell{
+          border-radius:32px;
+          border:1px solid var(--line-soft);
+          background:
+            radial-gradient(circle at 15% 15%, rgba(64,224,208,.12), transparent 42%),
+            radial-gradient(circle at 85% 20%, rgba(42,169,163,.10), transparent 40%),
+            var(--white);
+          box-shadow:var(--shadow);
+          padding:28px;
+        }
+        .hero-title{
+          margin:0;
+          font-size: clamp(2.2rem, 1.2rem + 3vw, 3.6rem);
+          line-height:1;
+          letter-spacing:-.03em;
+          font-weight:900;
+        }
+        .hero-sub{
+          margin:12px 0 0;
+          color:var(--muted);
+          max-width:860px;
+          font-weight:700;
+        }
+        .hero-search{
+          margin-top:18px;
+          display:flex; align-items:center; gap:10px;
+          background:var(--white);
+          border:1px solid var(--line);
+          border-radius:999px;
+          padding:8px 10px 8px 16px;
+          box-shadow:var(--shadow-sm);
+          max-width:900px;
+        }
+        .hero-search i{ color:var(--teal-2); flex-shrink:0; }
+        .hero-search input{
+          border:0; outline:none; background:transparent;
+          font-weight:800;
+          flex:1;
+          min-width:0;
+          font-size:1rem;
+          color:var(--text);
+        }
+        .hero-search input::placeholder{ color:#86a1a8; font-weight:700; }
+        .hero-search .mic-btn{
+          width:52px;height:52px;border-radius:999px;
+          border:1px solid var(--line);
+          background:var(--white);
+          display:grid;place-items:center;
+          cursor:pointer;
+          box-shadow: var(--shadow-sm);
+        }
+        .hero-search .mic-btn i{ color:var(--teal-2); }
+
+        .quick-actions{
+          margin-top:16px;
+          display:grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap:12px;
+          max-width:900px;
+        }
+        .quick-tile{
+          border-radius:24px;
+          border:1px solid var(--line);
+          background:var(--white);
+          padding:16px;
+          box-shadow:var(--shadow-sm);
+          display:grid;
+          gap:6px;
+          cursor:pointer;
+          transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+          min-height:110px;
+          text-align:left;
+        }
+        .quick-tile:hover{
+          transform: translateY(-2px);
+          box-shadow:var(--shadow);
+          border-color: rgba(42,169,163,.26);
+        }
+        .quick-tile__icon{
+          width:44px;height:44px;border-radius:16px;
+          display:grid;place-items:center;
+          background:var(--teal-soft);
+          color:var(--teal-2);
+          font-size:1.1rem;
+        }
+        .quick-tile__title{ font-weight:900; }
+        .quick-tile__meta{ color:var(--muted); font-weight:800; font-size:.9rem; }
+
+        .trust-line{
+          margin-top:14px;
+          display:flex; align-items:center; gap:10px;
+          color:var(--muted);
+          font-weight:800;
+          flex-wrap:wrap;
+        }
+        .trust-line i{ color:var(--teal-2); }
+
+        /* =========================================================
+           ЗАГОЛОВКИ + кнопка озвучивания 🔊
+           ========================================================= */
+        .section-head{
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+          flex-wrap:wrap;
+          margin-bottom:14px;
+        }
+        .section-title{
+          margin:0;
+          font-size: clamp(1.9rem, 1.3rem + 1.6vw, 2.6rem);
+          line-height:1.1;
+          letter-spacing:-.02em;
+          font-weight:900;
+        }
+        .speak-btn{
+          border:1px solid var(--line);
+          background:var(--white);
+          border-radius:999px;
+          min-height:52px;
+          padding:10px 14px;
+          display:inline-flex;
+          align-items:center;
+          gap:10px;
+          cursor:pointer;
+          font-weight:900;
+          box-shadow: var(--shadow-sm);
+        }
+        .speak-btn i{ color:var(--teal-2); }
+        .section-lead{
+          margin:0;
+          color:var(--muted);
+          font-weight:800;
+          max-width:900px;
+        }
+
+        /* =========================================================
+           PREP MAP (главная фишка): прогресс + таймлайн + детали
+           ========================================================= */
+        .prep-wrap{
+          padding:22px;
+          border-radius:28px;
+          border:1px solid var(--line);
+          background:
+            radial-gradient(circle at 8% 10%, rgba(64,224,208,.08), transparent 35%),
+            var(--white);
+          box-shadow:var(--shadow);
+        }
+
+        .prep-top{
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:14px;
+          flex-wrap:wrap;
+          margin-bottom:12px;
+        }
+        .prep-meta{
+          display:flex;
+          align-items:center;
+          gap:14px;
+          flex-wrap:wrap;
+        }
+        .prep-meta-text{
+          color:var(--muted);
+          font-weight:900;
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+        }
+        .prep-meta-text i{ color:var(--teal-2); }
+
+        .prep-progress{
+          height:16px;
+          border-radius:999px;
+          background:#eff8f7;
+          border:1px solid var(--line-soft);
+          overflow:hidden;
+          margin:10px 0 16px;
+        }
+        .prep-progress__bar{
+          height:100%;
+          width:0%;
+          border-radius:inherit;
+          background:var(--grad);
+          transition: width .4s ease;
+          box-shadow: inset 0 0 12px rgba(255,255,255,.3);
+        }
+
+        /* Donut диаграмма (SVG) */
+        .donut{
+          width:var(--donut-size);
+          height:var(--donut-size);
+          position:relative;
+          flex-shrink:0;
+        }
+        .donut svg{ width:100%; height:100%; transform: rotate(-90deg); }
+        .donut .track{
+          stroke:#e8f3f2;
+          stroke-width:12;
+          fill:none;
+        }
+        .donut .progress{
+          stroke: url(#tealGrad);
+          stroke-width:12;
+          fill:none;
+          stroke-linecap:round;
+          stroke-dasharray: 314;
+          stroke-dashoffset: 314;
+          transition: stroke-dashoffset .45s ease;
+        }
+        .donut-center{
+          position:absolute;
+          inset:0;
+          display:grid;
+          place-items:center;
+          text-align:center;
+          font-weight:900;
+          color:var(--text);
+        }
+        .donut-center small{
+          display:block;
+          font-size:.78rem;
+          color:var(--muted);
+          font-weight:900;
+          margin-top:2px;
+        }
+
+        /* Таймлайн */
+        .timeline{
+          position:relative;
+          display:grid;
+          grid-template-columns: repeat(6, minmax(120px, 1fr));
+          gap:12px;
+          align-items:start;
+          margin-top: 8px;
+        }
+        .timeline::before{
+          content:"";
+          position:absolute;
+          top:64px;
+          left:8%;
+          right:8%;
+          height:6px;
+          border-radius:999px;
+          background:#edf3f3;
+          z-index:0;
+        }
+        .step{
+          position:relative;
+          z-index:1;
+          display:grid;
+          justify-items:center;
+          text-align:center;
+          gap:10px;
+        }
+        .step-btn{
+          width:130px;
+          height:130px;
+          border-radius:999px;
+          border:2px solid #dfeaea;
+          background:#f7fbfb;
+          display:grid;
+          justify-items:center;
+          align-content:center;
+          gap:6px;
+          padding:12px;
+          box-shadow: 0 8px 18px -16px rgba(42,169,163,.30);
+          cursor:pointer;
+          user-select:none;
+          transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition), color var(--transition);
+        }
+        .step-btn:hover{
+          transform: translateY(-2px);
+          box-shadow: 0 16px 26px -20px rgba(42,169,163,.45);
+        }
+        .step-num{ font-weight:900; font-size:1.1rem; line-height:1; }
+        .step-icon{ font-size:1.25rem; line-height:1; }
+        .step-name{ font-weight:900; font-size:.82rem; line-height:1.1; max-width: 16ch; }
+        .step-hint{
+          margin-top:2px;
+          display:inline-flex; align-items:center; gap:6px;
+          border-radius:999px;
+          padding:5px 10px;
+          background:var(--teal-soft);
+          border:1px solid var(--line-soft);
+          color:var(--teal-2);
+          font-size:.78rem;
+          font-weight:900;
+        }
+
+        .step.is-done .step-btn{
+          background:var(--grad);
+          border-color:transparent;
+          color:var(--white);
+          box-shadow: 0 20px 36px -18px rgba(42,169,163,.40);
+        }
+        .step.is-current .step-btn{
+          background:var(--white);
+          border-color: var(--teal-2);
+          color: var(--teal-2);
+          animation: pulseRing 1.8s infinite;
+          box-shadow: 0 20px 34px -16px rgba(42,169,163,.30);
+        }
+        .step.is-future .step-btn{
+          background:#fafdfd;
+          border-color:#e3efef;
+          color:#a4b3b7;
+        }
+        .step.is-preview .step-btn{
+          outline: 3px solid rgba(64,224,208,.18);
+          outline-offset: 2px;
+        }
+
+        @keyframes pulseRing {
+          0% { box-shadow: 0 0 0 0 rgba(42,169,163,.22), 0 20px 34px -16px rgba(42,169,163,.30); }
+          70% { box-shadow: 0 0 0 16px rgba(42,169,163,0), 0 20px 34px -16px rgba(42,169,163,.22); }
+          100% { box-shadow: 0 0 0 0 rgba(42,169,163,0), 0 20px 34px -16px rgba(42,169,163,.30); }
+        }
+
+        /* Детали шага + чек-лист + дневник */
+        .prep-detail{
+          margin-top:18px;
+          display:grid;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap:16px;
+          align-items:start;
+        }
+        .detail{
+          padding:18px;
+          border-radius:24px;
+          border:1px solid var(--line);
+          box-shadow:var(--shadow-sm);
+          background:var(--white);
+        }
+        .detail-tag{
+          display:inline-flex;align-items:center;gap:8px;
+          border-radius:999px;
+          padding:8px 12px;
+          background:var(--teal-soft);
+          border:1px solid var(--line-soft);
+          color:var(--teal-2);
+          font-weight:900;
+          font-size:.9rem;
+          margin-bottom:10px;
+        }
+        .detail-title-row{
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:10px;
+          flex-wrap:wrap;
+        }
+        .detail-title{
+          margin:0;
+          font-size: clamp(1.25rem, 1rem + 1vw, 1.7rem);
+          font-weight:900;
+          letter-spacing:-.02em;
+          line-height:1.15;
+        }
+        .detail-desc{
+          margin:10px 0 0;
+          color:var(--muted);
+          font-weight:800;
+        }
+        .detail-actions{
+          margin-top:14px;
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+        }
+        .help-text{
+          margin-top:10px;
+          color:var(--muted);
+          font-weight:900;
+          display:none;
+        }
+        .help-text.show{ display:block; }
+
+        .side{
+          padding:16px;
+          border-radius:24px;
+          border:1px solid var(--line);
+          background:#fbfffe;
+          box-shadow:var(--shadow-sm);
+          display:grid;
+          gap:14px;
+        }
+        .side h3{
+          margin:0;
+          font-size:1.05rem;
+          font-weight:900;
+          display:flex;
+          align-items:center;
+          gap:8px;
+        }
+        .side h3 i{ color:var(--teal-2); }
+        .side .note{
+          margin:0;
+          color:var(--muted);
+          font-weight:800;
+          font-size:.9rem;
+          line-height:1.35;
+        }
+        .checklist{ display:grid; gap:10px; }
+        .check-item{
+          display:grid;
+          grid-template-columns:auto 1fr;
+          gap:10px;
+          align-items:center;
+          padding:10px 12px;
+          border-radius:16px;
+          border:1px solid var(--line-soft);
+          background:var(--white);
+          transition: background var(--transition), border-color var(--transition);
+        }
+        .check-item input{
+          width:20px;height:20px;
+          accent-color: var(--teal-2);
+          cursor:pointer;
+        }
+        .check-item label{
+          cursor:pointer;
+          font-weight:900;
+          font-size:.95rem;
+          line-height:1.25;
+        }
+        .check-item.is-checked{
+          background:var(--teal-soft);
+          border-color: rgba(42,169,163,.20);
+        }
+        .side-footer{
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:10px;
+          flex-wrap:wrap;
+          color:var(--muted);
+          font-weight:900;
+          font-size:.9rem;
+        }
+        .tiny-link{
+          border:0;
+          background:transparent;
+          color:var(--teal-2);
+          font-weight:900;
+          cursor:pointer;
+          padding:0;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
+        /* Дневник самочувствия */
+        .mood{
+          border-radius:20px;
+          border:1px solid var(--line);
+          background:var(--white);
+          padding:14px;
+          box-shadow: var(--shadow-sm);
+        }
+        .mood-title{
+          margin:0 0 10px;
+          font-weight:900;
+          display:flex;
+          align-items:center;
+          gap:10px;
+        }
+        .mood-title i{ color:var(--teal-2); }
+        .mood-actions{
+          display:grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap:10px;
+        }
+        .mood-btn{
+          border:1px solid var(--line);
+          background:#fbfffe;
+          border-radius: 24px;
+          min-height:64px;
+          font-size: 1.35rem;
+          cursor:pointer;
+          font-weight:900;
+          box-shadow: var(--shadow-sm);
+          transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+        }
+        .mood-btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow); }
+        .mood-btn.is-selected{
+          background: var(--teal-soft);
+          border-color: rgba(42,169,163,.30);
+          outline: 3px solid rgba(64,224,208,.18);
+          outline-offset: 2px;
+        }
+        .mood-msg{
+          margin:10px 0 0;
+          color:var(--teal-2);
+          font-weight:900;
+          display:none;
+        }
+        .mood-msg.show{ display:block; }
+
+        /* Скачать памятку */
+        .download-row{
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+          align-items:center;
+          justify-content:flex-start;
+          margin-top:12px;
+        }
+
+        /* =========================================================
+           FAQ (аккордеон) — один блок, без лишнего
+           ========================================================= */
+        .faq{
+          margin-top:14px;
+          display:grid;
+          gap:12px;
+        }
+        .faq-item{
+          border-radius:22px;
+          border:1px solid var(--line);
+          background:var(--white);
+          box-shadow:var(--shadow-sm);
+          overflow:hidden;
+        }
+        .faq-q{
+          width:100%;
+          border:0;
+          background:transparent;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+          text-align:left;
+          padding:16px 16px;
+          cursor:pointer;
+          font-weight:900;
+          color:var(--text);
+          font-size:1rem;
+        }
+        .faq-q:hover{ background:#fbfffe; }
+        .faq-q .left{
+          display:inline-flex; align-items:center; gap:10px;
+          min-width:0;
+        }
+        .faq-q .left i{ color:var(--teal-2); flex-shrink:0; }
+        .faq-q .chev{ color:var(--teal-2); transition: transform var(--transition); flex-shrink:0; }
+        .faq-item.is-open .faq-q .chev{ transform: rotate(180deg); }
+
+        .faq-a{
+          max-height:0;
+          overflow:hidden;
+          transition: max-height .35s ease;
+          background:#fcfffe;
+          border-top:1px solid transparent;
+        }
+        .faq-item.is-open .faq-a{ border-top-color: var(--line-soft); }
+        .faq-a__inner{
+          padding:0 16px 16px;
+          color:var(--muted);
+          font-weight:800;
+          font-size:.95rem;
+          line-height:1.45;
+        }
+
+        /* =========================================================
+           Пациенты: доверенное лицо
+           ========================================================= */
+        .patients-card{
+          padding:18px;
+          border-radius:24px;
+          border:1px solid var(--line);
+          box-shadow:var(--shadow-sm);
+          background: var(--white);
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+          flex-wrap:wrap;
+        }
+        .patients-card p{
+          margin:0;
+          color:var(--muted);
+          font-weight:800;
+          max-width:760px;
+        }
+
+        /* =========================================================
+           Footer (минималистичный)
+           ========================================================= */
+        .footer{
+          border-top:1px solid var(--line-soft);
+          background:#fbfffe;
+          padding:22px 0;
+          color:var(--muted);
+          font-weight:800;
+          font-size:.9rem;
+        }
+        .footer-grid{
+          display:grid;
+          grid-template-columns: 1.1fr .9fr .9fr;
+          gap:14px;
+          align-items:start;
+        }
+        .footer h4{ margin:0 0 8px; color:var(--text); font-weight:900; font-size:1rem; }
+        .footer a:hover{ color: var(--teal-2); text-decoration: underline; }
+
+        /* =========================================================
+           MODALS (универсальные)
+           ========================================================= */
+        .modal{
+          position:fixed;
+          inset:0;
+          z-index:120;
+          display:none;
+          align-items:center;
+          justify-content:center;
+          padding:16px;
+          background: rgba(45,62,80,.38);
+          backdrop-filter: blur(6px);
+        }
+        .modal.is-open{ display:flex; }
+        .modal__dialog{
+          width:min(560px, 100%);
+          background:var(--white);
+          border-radius:28px;
+          border:1px solid var(--line);
+          box-shadow:var(--shadow);
+          overflow:hidden;
+        }
+        .modal__head{
+          display:flex;
+          align-items:start;
+          justify-content:space-between;
+          gap:12px;
+          padding:18px 18px 10px;
+        }
+        .modal__title{
+          margin:0;
+          font-size:1.35rem;
+          line-height:1.15;
+          font-weight:900;
+          letter-spacing:-.02em;
+        }
+        .modal__sub{
+          margin:6px 0 0;
+          color:var(--muted);
+          font-weight:800;
+          font-size:.95rem;
+          line-height:1.35;
+        }
+        .modal__close{
+          width:46px;height:46px;
+          border-radius:999px;
+          border:1px solid var(--line);
+          background:var(--white);
+          cursor:pointer;
+          box-shadow:var(--shadow-sm);
+          display:grid; place-items:center;
+        }
+        .modal__body{ padding:0 18px 18px; }
+
+        .field{ display:grid; gap:6px; }
+        .field label{ font-weight:900; font-size:.95rem; }
+        .field input{
+          border:1px solid var(--line);
+          border-radius:16px;
+          padding:14px 14px;
+          background:#fcfffe;
+          color:var(--text);
+          font-weight:800;
+          outline:none;
+          transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .field input:focus{
+          border-color: rgba(42,169,163,.36);
+          box-shadow: 0 0 0 4px rgba(64,224,208,.18);
+          background:var(--white);
+        }
+        .field-error{
+          min-height:18px;
+          font-size:12px;
+          line-height:1.3;
+          color:#D62828;
+          margin-top:2px;
+          font-weight:800;
+        }
+        .field.is-error input{
+          border-color:#D62828 !important;
+          box-shadow: 0 0 0 4px rgba(214,40,40,.12) !important;
+          background:#fff;
+        }
+
+        /* Видео-заглушка */
+        .video-box{
+          height: 260px;
+          border-radius: 22px;
+          border: 2px dashed rgba(42,169,163,.25);
+          background: #f7fffe;
+          display:grid;
+          place-items:center;
+          text-align:center;
+          padding:16px;
+          font-weight:900;
+          color:var(--muted);
+        }
+
+        /* Срочная помощь (крупная красная кнопка) */
+        .panic-fixed{
+          position:fixed;
+          right:18px;
+          bottom:96px;
+          z-index:110;
+          border:0;
+          border-radius: 999px;
+          min-height:62px;
+          padding:14px 18px;
+          display:flex;
+          align-items:center;
+          gap:10px;
+          cursor:pointer;
+          font-weight:900;
+          color:#fff;
+          background: linear-gradient(135deg,#ff4d4d,#ff7a4d);
+          box-shadow: 0 20px 40px -10px rgba(255,77,77,.35);
+        }
+        .panic-fixed:focus-visible{
+          outline:3px solid rgba(255,77,77,.35);
+          outline-offset:2px;
+        }
+
+        /* =========================================================
+           ЧАТ-ПАНЕЛЬ (FAQ-бот) — по кнопке в плавающем меню
+           ========================================================= */
+        .chat-panel{
+          position:fixed;
+          right:18px;
+          bottom:18px;
+          z-index:115;
+          width: 340px;
+          max-width: calc(100% - 24px);
+          height: 460px;
+          background: var(--white);
+          border: 1px solid var(--line);
+          border-radius: 24px;
+          box-shadow: var(--shadow);
+          display:none;
+          overflow:hidden;
+        }
+        .chat-panel.is-open{ display:grid; grid-template-rows:auto 1fr auto; }
+        .chat-head{
+          padding:12px 12px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:10px;
+          border-bottom:1px solid var(--line-soft);
+          background:#fbfffe;
+        }
+        .chat-head strong{ font-weight:900; }
+        .chat-body{
+          padding:12px;
+          overflow:auto;
+          display:grid;
+          gap:10px;
+        }
+        .msg{
+          max-width: 92%;
+          padding:10px 12px;
+          border-radius: 18px;
+          border:1px solid var(--line-soft);
+          font-weight:800;
+          font-size:.95rem;
+          line-height:1.35;
+          background:#fbfffe;
+        }
+        .msg.user{
+          margin-left:auto;
+          background: var(--teal-soft);
+          border-color: rgba(42,169,163,.18);
+        }
+        .chat-foot{
+          padding:10px;
+          border-top:1px solid var(--line-soft);
+          display:flex;
+          gap:10px;
+          background:var(--white);
+        }
+        .chat-foot input{
+          flex:1;
+          border:1px solid var(--line);
+          border-radius: 999px;
+          padding:12px 14px;
+          font-weight:900;
+          outline:none;
+          background:#fcfffe;
+        }
+        .chat-foot input:focus{
+          border-color: rgba(42,169,163,.36);
+          box-shadow: 0 0 0 4px rgba(64,224,208,.18);
+          background:var(--white);
+        }
+        .chat-close{
+          width:46px;height:46px;
+          border-radius:999px;
+          border:1px solid var(--line);
+          background:var(--white);
+          cursor:pointer;
+          box-shadow: var(--shadow-sm);
+          display:grid;place-items:center;
+        }
+
+        /* =========================================================
+           ПЛАВАЮЩАЯ КНОПКА-БЫСТРЫЕ ДЕЙСТВИЯ
+           ========================================================= */
+        .fab{
+          position:fixed;
+          right:18px;
+          bottom:18px;
+          z-index:110;
+          display:grid;
+          justify-items:end;
+          gap:10px;
+        }
+        .fab-menu{
+          display:grid;
+          gap:8px;
+          opacity:0;
+          transform: translateY(10px);
+          pointer-events:none;
+          transition: opacity var(--transition), transform var(--transition);
+        }
+        .fab.is-open .fab-menu{
+          opacity:1;
+          transform: translateY(0);
+          pointer-events:auto;
+        }
+        .fab-menu button,
+        .fab-menu a{
+          border:1px solid var(--line);
+          background:var(--white);
+          color:var(--text);
+          border-radius:999px;
+          min-height:50px;
+          padding:10px 14px;
+          display:inline-flex;
+          align-items:center;
+          gap:10px;
+          font-weight:900;
+          cursor:pointer;
+          box-shadow: var(--shadow);
+          white-space:nowrap;
+        }
+        .fab-menu i{ color:var(--teal-2); }
+        .fab-main{
+          width:62px;height:62px;border-radius:999px;
+          border:0;
+          background:var(--grad);
+          color:#fff;
+          box-shadow: var(--shadow);
+          display:grid;place-items:center;
+          cursor:pointer;
+          font-size:1.2rem;
+        }
+        .fab-main .fa-xmark{ display:none; }
+        .fab.is-open .fab-main .fa-comments{ display:none; }
+        .fab.is-open .fab-main .fa-xmark{ display:inline-block; }
+
+        /* =========================================================
+           TOAST (подсказки)
+           ========================================================= */
+        .toast{
+          position:fixed;
+          left:50%;
+          bottom:18px;
+          transform: translateX(-50%) translateY(12px);
+          z-index:140;
+          background:var(--white);
+          border:1px solid var(--line);
+          border-radius:999px;
+          padding:10px 14px;
+          box-shadow: var(--shadow);
+          color: var(--text);
+          font-weight:900;
+          opacity:0;
+          pointer-events:none;
+          transition: opacity var(--transition), transform var(--transition);
+          max-width: calc(100% - 24px);
+          text-align:center;
+          font-size:.95rem;
+        }
+        .toast.show{
+          opacity:1;
+          transform: translateX(-50%) translateY(0);
+        }
+
+        /* =========================================================
+           РЕЖИМЫ: "Крупный" и "Упрощённый"
+           ========================================================= */
+        body.a11y-mode{
+          font-size:20px;
+        }
+        body.a11y-mode .btn{ min-height:58px; }
+        body.a11y-mode .quick-tile{ min-height:120px; }
+        body.a11y-mode .nav a,
+        body.a11y-mode .phone-pill{ border-width:2px; }
+
+        /* Упрощённый: оставить карту + быстрые действия; увеличить шрифты; толстые контуры */
+        body.simple-mode{
+          font-size:22px;
+        }
+        body.simple-mode .section-title{ font-size:28px !important; }
+        body.simple-mode .btn{ min-height:60px; }
+        body.simple-mode .btn,
+        body.simple-mode .icon-btn,
+        body.simple-mode .step-btn,
+        body.simple-mode .mood-btn,
+        body.simple-mode input{
+          outline: 3px solid rgba(45,62,80,.25);
+          outline-offset: 2px;
+        }
+        body.simple-mode .nav-row,
+        body.simple-mode #hero,
+        body.simple-mode #faq,
+        body.simple-mode #doctors,
+        body.simple-mode #patients,
+        body.simple-mode footer{
+          display:none !important;
+        }
+        body.simple-mode .panic-fixed{ bottom: 90px; }
+        body.simple-mode .fab{ bottom: 18px; }
+
+        /* =========================================================
+           АДАПТИВНОСТЬ
+           ========================================================= */
+        @media (max-width: 980px){
+          .timeline{
+            grid-template-columns: repeat(3, minmax(110px,1fr));
+            row-gap:18px;
+          }
+          .timeline::before{
+            top:56px;
+            left:6%;
+            right:6%;
+          }
+          .step-btn{ width:112px; height:112px; }
+          .quick-actions{ grid-template-columns: repeat(2, 1fr); }
+          .footer-grid{ grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 860px){
+          body{ font-size:16px; } /* минимум на мобиле */
+          .phone-pill{ display:none; }
+          .header-mini-phone{ display:grid; }
+          .burger{ display:grid; }
+          .nav{ display:none; }
+          .nav.is-open{
+            display:grid;
+            position:absolute;
+            top: calc(100% + 8px);
+            left:0; right:0;
+            z-index:80;
+            padding:12px;
+            border-radius:24px;
+            border:1px solid var(--line);
+            background:var(--white);
+            box-shadow: var(--shadow);
+            gap:8px;
+          }
+          .nav.is-open a{
+            justify-content:space-between;
+            border:1px solid var(--line-soft);
+            background:#fbfffe;
+          }
+
+          .quick-actions{ grid-template-columns: 1fr; }
+          .hero-search{ flex-wrap:wrap; border-radius:24px; padding:10px; }
+          .hero-search .btn{ width:100%; }
+          .hero-search .mic-btn{ width:100%; height:56px; border-radius: 24px; }
+
+          .prep-detail{ grid-template-columns: 1fr; }
+
+          /* мобильный таймлайн → вертикальные карточки */
+          .timeline{
+            grid-template-columns: 1fr;
+          }
+          .timeline::before{ display:none; }
+          .step{ justify-items:stretch; text-align:left; }
+          .step-btn{
+            width:100%;
+            height:auto;
+            min-height:92px;
+            border-radius:24px;
+            display:grid;
+            grid-template-columns: auto auto 1fr auto;
+            grid-template-rows:auto auto;
+            align-items:center;
+            justify-items:start;
+            gap:6px 10px;
+            padding:14px;
+          }
+          .step-num{
+            grid-column:1;
+            grid-row:1 / span 2;
+            width:36px;height:36px;border-radius:999px;
+            display:grid;place-items:center;
+            background: rgba(255,255,255,.35);
+            border:1px solid rgba(255,255,255,.18);
+            font-size:.95rem;
+          }
+          .step-icon{
+            grid-column:2;
+            grid-row:1 / span 2;
+            font-size:1.05rem;
+          }
+          .step-name{ grid-column:3; grid-row:1; max-width:none; font-size:.95rem; }
+          .step-hint{ grid-column:4; grid-row:1 / span 2; justify-self:end; }
+
+          /* чат на весь экран */
+          .chat-panel{
+            right:0; left:0;
+            bottom:0;
+            width:100%;
+            height: 75vh;
+            max-width:none;
+            border-radius: 24px 24px 0 0;
+          }
+
+          .panic-fixed{
+            right:12px;
+            left:12px;
+            width:auto;
+            justify-content:center;
+            bottom: 92px;
+          }
+
+          .fab{ right:12px; bottom:12px; }
+        }
+
+        @media (max-width: 560px){
+          .container{ width:min(var(--container), calc(100% - 20px)); }
+          .hero-shell{ padding:20px; border-radius:24px; }
+          .prep-wrap{ padding:16px; border-radius:24px; }
+          .modal__head, .modal__body{ padding-left:14px; padding-right:14px; }
+          .footer-grid{ grid-template-columns:1fr; }
+        }
+      /* =========================================================
+       ДОПОЛНИТЕЛЬНО: подробный инфо-блок (more-info)
+       ========================================================= */
+    .info-grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+    .info-card{
+      border-radius:24px;
+      border:1px solid var(--line);
+      background:var(--white);
+      box-shadow:var(--shadow-sm);
+      padding:16px;
+    }
+    .info-card h3{
+      margin:0 0 10px;
+      font-size:1.05rem;
+      line-height:1.2;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .info-card h3 i{ color:var(--teal-2); }
+    .info-card p{
+      margin:0;
+      color:var(--muted);
+      font-weight:800;
+      line-height:1.4;
+    }
+    .info-card + .info-card{ margin-top:0; }
+
+    .badges-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:38px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line-soft);
+      background:var(--teal-soft);
+      color:var(--teal-2);
+      font-weight:900;
+      font-size:.9rem;
     }
 
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", "Nunito", Arial, sans-serif;
-      color: var(--text);
-      background: linear-gradient(180deg, #ffffff 0%, #f4fbff 42%, #eef8f7 100%);
-      font-size: 17px;
+    .list-check{
+      margin:0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:8px;
+    }
+    .list-check li{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:10px;
+      align-items:start;
+      border:1px solid var(--line-soft);
+      border-radius:16px;
+      background:#fbfffe;
+      padding:10px 12px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .list-check li i{
+      color:var(--teal-2);
+      margin-top:2px;
     }
 
-    .container {
-      width: min(1240px, calc(100% - 24px));
-      margin: 0 auto;
+    .split-grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:12px;
+      align-items:start;
     }
 
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      background: rgba(255, 255, 255, 0.95);
-      border-bottom: 1px solid var(--line-soft);
-      backdrop-filter: blur(10px);
+    .timeline-mini{
+      display:grid;
+      gap:10px;
+    }
+    .timeline-mini__item{
+      border-radius:18px;
+      border:1px solid var(--line-soft);
+      background:#fbfffe;
+      padding:12px;
+    }
+    .timeline-mini__item strong{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+    .timeline-mini__item strong i{ color:var(--teal-2); }
+    .timeline-mini__item p{
+      margin:0;
+      color:var(--muted);
+      font-weight:800;
+      line-height:1.35;
     }
 
-    .header-inner {
-      min-height: 78px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
+    .info-actions{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
-    .brand {
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .info-note{
+      margin-top:10px;
+      color:var(--muted);
+      font-weight:800;
+      font-size:.92rem;
+      line-height:1.35;
     }
 
-    .brand-badge {
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
-      background: linear-gradient(135deg, var(--teal-1), var(--teal-2));
-      color: #fff;
-      display: grid;
-      place-items: center;
-      box-shadow: var(--shadow);
-      font-size: 1.05rem;
+    /* В упрощённом режиме скрываем подробный блок */
+    body.simple-mode #more-info{
+      display:none !important;
     }
 
-    .btn {
-      cursor: pointer;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: #fff;
-      color: var(--text);
-      font: inherit;
-      min-height: 44px;
-      padding: 10px 16px;
-      font-weight: 700;
+    @media (max-width: 980px){
+      .info-grid{ grid-template-columns:1fr 1fr; }
+      .split-grid{ grid-template-columns:1fr; }
     }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--teal-1), var(--teal-2));
-      border-color: transparent;
-      color: #fff;
-      box-shadow: var(--shadow);
+    @media (max-width: 860px){
+      .info-grid{ grid-template-columns:1fr; }
     }
+    @media (max-width: 480px){
+  /* ВАЖНО: переводим шапку в одну колонку */
+  .header-inner{
+    grid-template-columns: 1fr !important;
+    row-gap: 10px;
+    align-items: stretch;
+  }
 
-    .btn-ghost {
-      background: #fff;
-      color: var(--teal-2);
-      border-color: var(--line);
-    }
+  .brand,
+  .header-center,
+  .header-actions{
+    grid-column: 1 / -1 !important;
+  }
 
-    .hero {
-      margin-top: 14px;
-      padding: 22px;
-      border: 1px solid var(--line-soft);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      background: radial-gradient(circle at 20% 20%, rgba(64,224,208,.2), transparent 48%), #fff;
-    }
+  .brand{
+    width: 100%;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 10px;
+  }
 
-    .hero h1 {
-      margin: 0;
-      font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.5rem);
-      line-height: 1.1;
-    }
+  .brand__icon{
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    flex-shrink: 0;
+  }
 
-    .hero p {
-      margin: 10px 0 0;
-      color: var(--muted);
-      max-width: 900px;
-    }
+  .brand__text{
+    font-size: 1rem;
+    line-height: 1.08;
+    min-width: 0;
+    max-width: 100%;
+    word-break: break-word;
+  }
 
-    .app-shell {
-      margin: 16px 0 26px;
-      border-radius: 24px;
-      border: 1px solid var(--line-soft);
-      background: var(--bg);
-      padding: 14px;
-    }
+  /* Подзаголовок часто не помещается на узком экране */
+  .brand__text small{
+    display: none;
+  }
 
-    .topbar {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-    }
+  /* Номер в центре на маленьком экране не нужен */
+  .header-center{
+    display: none !important;
+  }
 
-    .title { font-size: 1.2rem; font-weight: 800; }
-    .subtitle { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
-    .roles { display: flex; gap: 8px; flex-wrap: wrap; }
-    .active-role { outline: 3px solid rgba(42,169,163,.25); }
+  /* Кнопки под логотипом — сеткой 2x2 */
+  .header-actions{
+    width: 100%;
+    max-width: none;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    justify-content: stretch !important;
+    align-items: stretch;
+  }
 
-    .grid { display: grid; gap: 14px; margin-top: 14px; }
-    .grid-2 { grid-template-columns: 1.3fr 1fr; }
+  .header-actions > *{
+    min-width: 0;
+  }
 
-    .card {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 14px;
-    }
+  /* Иконки (телефон/вход) растягиваем по ширине ячейки */
+  .header-actions .icon-btn{
+    width: 100% !important;
+    height: 46px;
+    border-radius: 14px;
+  }
 
-    .card h2, .card h3 { margin: 0 0 10px; font-size: 1.05rem; }
-    .badge { padding: 5px 10px; border-radius: 999px; color: #fff; font-weight: 700; display: inline-flex; }
-    .red { background: var(--danger); }
-    .yellow { background: var(--warning); }
-    .green { background: var(--success); }
+  /* Текстовые кнопки делаем компактнее */
+  #toggleA11yBtn,
+  #toggleSimpleBtn{
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 10px 8px;
+    font-size: .82rem;
+    line-height: 1.1;
+    white-space: normal;
+    justify-content: center;
+  }
+}
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-    th, td { border-bottom: 1px solid var(--line-soft); text-align: left; padding: 8px 6px; vertical-align: top; }
-    th { color: var(--muted); font-weight: 600; }
+/* Для совсем узких экранов (320px) — прячем лишнее */
+@media (max-width: 360px){
+  .header-mini-phone{
+    display: none !important;
+  }
 
-    .check-item { border: 1px solid var(--line-soft); border-radius: 10px; padding: 10px; margin-bottom: 8px; background: #fcffff; }
-    .check-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-    .muted { color: var(--muted); }
-    .small { font-size: 0.87rem; }
+  #openLoginBtn{
+    display: none !important;
+  }
 
-    .field-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-bottom: 8px; }
-    .field-row-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+  .brand__text{
+    font-size: .95rem;
+  }
+}
+        /* ===== Mobile Lite: уменьшаем "Срочная помощь" ===== */
+@media (max-width: 860px){
+  .panic-fixed{
+    left: auto !important;
+    right: 12px !important;
+    bottom: 84px !important;
 
-    input, textarea {
-      width: 100%;
-      font: inherit;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      background: #fff;
-    }
+    width: auto !important;
+    min-height: 48px !important;
+    padding: 10px 12px !important;
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px dashed var(--line);
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: #fff;
-    }
+    font-size: 0.95rem !important;
+    box-shadow: 0 14px 26px -14px rgba(255,77,77,.35) !important;
+  }
+}
+@media (max-width: 560px){
+  .panic-fixed{
+    min-height: 44px !important;
+    padding: 9px 11px !important;
+    font-size: 0.9rem !important;
+  }
+}
+        /* ===== Mobile Lite: упрощаем интерфейс на телефоне ===== */
+@media (max-width: 860px){
+  /* меньше воздуха */
+  .section{ padding: 40px 0 !important; }
 
-    .timeline { list-style: none; padding: 0; margin: 0; }
-    .timeline li { padding: 10px; border-left: 4px solid #9dc7cc; background: #f5feff; margin-bottom: 8px; border-radius: 8px; }
+  /* карточки проще: меньше теней */
+  .card,
+  .prep-wrap,
+  .detail,
+  .side,
+  .faq-item{
+    box-shadow: none !important;
+  }
 
-    .site-footer {
-      color: var(--muted);
-      text-align: center;
-      font-size: 0.92rem;
-      padding: 0 0 18px;
-    }
+  /* меньше радиусы */
+  .hero-shell,
+  .prep-wrap,
+  .detail,
+  .side{
+    border-radius: 18px !important;
+  }
 
-    @media (max-width: 980px) {
-      .grid-2 { grid-template-columns: 1fr; }
-      .field-row, .field-row-4 { grid-template-columns: 1fr; }
-      body { font-size: 18px; }
-      .btn, input, textarea { min-height: 44px; }
-    }
-  </style>
+  /* hero компактнее */
+  .hero-shell{ padding: 16px !important; }
+  .hero-title{ font-size: 1.7rem !important; line-height: 1.1 !important; }
+  .hero-sub{ font-size: .95rem !important; }
+
+  /* быстрые действия: оставить 2–3, чтобы не было “простыни” */
+  .quick-actions{
+    gap: 10px !important;
+  }
+  /* если хочешь совсем проще — раскомментируй строку ниже, чтобы скрыть быстрые плитки */
+  /* .quick-actions{ display:none !important; } */
+
+  /* таймлайн/шаги уже у тебя вертикальные — уменьшим отступы */
+  .step-btn{ padding: 12px !important; }
+  .detail-actions .btn{ width: 100%; } /* большие кнопки в 1 колонку */
+  .chat-foot{ gap: 8px !important; }
+
+  /* FAB кнопка чуть меньше */
+  .fab-main{ width: 56px !important; height: 56px !important; }
+}
+        /* ===== ШАПКА: сделать выше + упростить две кнопки ===== */
+
+/* Шапка чуть выше */
+.site-header .header-inner{
+  min-height: 92px;      /* было ~78 */
+  padding: 16px 0;       /* было 12px 0 */
+}
+
+/* Кнопки "Крупнее" и "Упрощённо" — проще и выше */
+#toggleA11yBtn,
+#toggleSimpleBtn{
+  min-height: 58px;      /* выше */
+  padding: 14px 18px;    /* удобнее */
+  font-size: 0.98rem;    /* чуть крупнее */
+  box-shadow: none;      /* проще (без сильной тени) */
+  border-width: 2px;     /* читаемее */
+}
+
+/* Чтобы в шапке выглядело ровнее */
+.header-actions{
+  align-items: center;
+}
+
+/* На телефоне — тоже чуть выше, но компактно */
+@media (max-width: 860px){
+  .site-header .header-inner{
+    min-height: 86px;
+    padding: 14px 0;
+  }
+
+  #toggleA11yBtn,
+  #toggleSimpleBtn{
+    min-height: 52px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+  }
+}
+        .brand__icon--img{
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  padding: 6px;
+  box-shadow: var(--shadow-sm);
+}
+.brand__icon--img img{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  border-radius: 12px;
+}
+        .modal{
+  position:fixed; inset:0; z-index:120;
+  display:none; align-items:center; justify-content:center;
+  padding:16px;
+  background: rgba(45,62,80,.38);
+  backdrop-filter: blur(6px);
+}
+.modal.is-open{ display:flex; }
+.modal__dialog{
+  width:min(560px, 100%);
+  background:var(--white);
+  border-radius:28px;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.modal__head{
+  display:flex; align-items:start; justify-content:space-between;
+  gap:12px; padding:18px 18px 10px;
+}
+.modal__body{ padding:0 18px 18px; }
+.modal__close{
+  width:46px;height:46px;border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--white);
+  cursor:pointer;
+  box-shadow:var(--shadow-sm);
+  display:grid; place-items:center;
+}
+        /* FAB всегда выше, чем "Срочная помощь" */
+.fab { z-index: 130 !important; }
+.fab-menu { z-index: 130 !important; }
+
+/* "Срочная помощь" ниже по слою */
+.panic-fixed { z-index: 105 !important; }
+
+/* На мобиле уводим "Срочную помощь" влево, FAB остается справа */
+@media (max-width: 860px){
+  .panic-fixed{
+    left: 12px !important;
+    right: auto !important;
+    bottom: 12px !important;
+
+    min-height: 48px !important;
+    padding: 10px 12px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .fab{
+    right: 12px !important;
+    bottom: 12px !important;
+  }
+}
+    </style>
 </head>
+
 <body>
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
 <header class="site-header">
-  <div class="container header-inner">
-    <div class="brand">
-      <div class="brand-badge">👁️</div>
-      <div>
-        Окулус‑Фельдшер
-        <div class="subtitle">Региональная цифровая подготовка к операции</div>
-      </div>
+    <div class="container">
+        <div class="header-inner">
+            <a class="brand" href="#top" aria-label="Oculus MD — на главную">
+  <span class="brand__icon brand__icon--img" aria-hidden="true">
+    <img src="Oculus_MD_icon_1024.png" alt="" />
+  </span>
+                <span class="brand__text">
+    Oculus MD
+    <small>подготовка к операции онлайн</small>
+  </span>
+            </a>
+
+            <div class="header-center">
+                <a class="phone-pill" href="tel:+78001234567" aria-label="Позвонить +7 800 123-45-67">
+                    <i class="fa-solid fa-headset"></i>
+                    +7 800 123-45-67
+                </a>
+            </div>
+
+            <div class="header-actions">
+                <a class="icon-btn header-mini-phone" href="tel:+78001234567" aria-label="Позвонить">
+                    <i class="fa-solid fa-headset"></i>
+                </a>
+
+                <button class="icon-btn" type="button" id="openLoginBtn" aria-label="Войти">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+
+                <!-- Режим крупного текста (условная "версия для слабовидящих") -->
+                <button class="btn btn-soft" type="button" id="toggleA11yBtn" aria-pressed="false" title="Крупнее и контрастнее">
+                    👁️ Крупнее
+                </button>
+
+                <!-- Упрощённый режим -->
+                <button class="btn btn-teal" type="button" id="toggleSimpleBtn" aria-pressed="false" title="Оставить только самое важное">
+                    👵 Упрощённо
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-row">
+            <div class="nav-inner">
+                <nav class="nav" id="mainNav" aria-label="Навигация">
+                    <a href="#prices">Цены <i class="fa-solid fa-chevron-down"></i></a>
+                    <a href="#clinics">Клиники <i class="fa-solid fa-chevron-down"></i></a>
+                    <a href="#infohub">Инфоцентр <i class="fa-solid fa-chevron-down"></i></a>
+                    <a href="#doctors">Для врачей <i class="fa-solid fa-chevron-down"></i></a>
+                    <a href="#prep-map" class="btn btn-teal" style="min-height:52px;">Записаться</a>
+                </nav>
+
+                <button class="burger" id="burgerBtn" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mainNav">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
     </div>
-    <button id="jumpToApp" class="btn btn-primary">Открыть рабочий кабинет</button>
-  </div>
 </header>
 
-<main class="container">
-  <section class="hero">
-    <h1>Подготовка пациента без лишних поездок в областной центр</h1>
-    <p>
-      Версия адаптирована под ваш сайт: медицинский стиль, крупные контрастные элементы, таблицы и чек‑листы.
-      Внутри — роли фельдшера, хирурга и пациента, расчёт ИОЛ, статусы, комментарии и офлайн‑очередь синхронизации.
-    </p>
-  </section>
+<main id="top">
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+    <section class="section" id="hero">
+        <div class="container">
+            <div class="hero-shell card">
+                <h1 class="hero-title">Добро пожаловать! Чем мы можем вам помочь?</h1>
+                <p class="hero-sub">
+                    Здесь всё просто: шаги подготовки, понятные инструкции, чат и напоминания — чтобы вам было спокойно.
+                </p>
 
-  <section id="appRoot" class="app-shell">
-    <header class="topbar">
-      <div>
-        <div class="title">Окулус‑Фельдшер — рабочий контур MVP</div>
-        <div class="subtitle">Роль выбирается справа. Данные сохраняются в localStorage для офлайн‑поведения.</div>
-      </div>
-      <div class="roles">
-        <button id="roleF" class="btn btn-ghost">Фельдшер</button>
-        <button id="roleS" class="btn btn-ghost">Хирург</button>
-        <button id="roleP" class="btn btn-ghost">Пациент</button>
-      </div>
-    </header>
+                <!-- Поиск + голосовой ввод -->
+                <div class="hero-search" role="search" aria-label="Поиск по ответам">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="searchInput" type="search" placeholder="Найти ответ на вопрос..." />
+                    <button class="mic-btn" type="button" id="voiceInputBtn" aria-label="Голосовой ввод">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <button class="btn btn-teal" type="button" id="searchBtn">Найти</button>
+                </div>
 
-    <section id="viewF" class="grid grid-2"></section>
-    <section id="viewS" class="grid" style="display:none"></section>
-    <section id="viewP" class="grid" style="display:none"></section>
-  </section>
+                <!-- Быстрые действия (крупно) -->
+                <div class="quick-actions" aria-label="Быстрые действия">
+                    <button class="quick-tile" type="button" data-scroll-to="#prep-map">
+                        <span class="quick-tile__icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                        <span class="quick-tile__title">📋 Моя подготовка</span>
+                        <span class="quick-tile__meta">Открыть карту шагов и прогресс</span>
+                    </button>
+
+                    <button class="quick-tile" type="button" id="openChatFromHero">
+                        <span class="quick-tile__icon"><i class="fa-solid fa-comments"></i></span>
+                        <span class="quick-tile__title">💬 Чат</span>
+                        <span class="quick-tile__meta">Задать вопрос (бот-демо)</span>
+                    </button>
+
+                    <button class="quick-tile" type="button" id="openVideoFromHero">
+                        <span class="quick-tile__icon"><i class="fa-solid fa-video"></i></span>
+                        <span class="quick-tile__title">📹 Видеозвонок</span>
+                        <span class="quick-tile__meta">Демо-режим звонка</span>
+                    </button>
+
+                    <button class="quick-tile" type="button" data-scroll-to="#faq">
+                        <span class="quick-tile__icon"><i class="fa-solid fa-circle-question"></i></span>
+                        <span class="quick-tile__title">❓ Вопросы</span>
+                        <span class="quick-tile__meta">Короткие ответы</span>
+                    </button>
+                </div>
+
+                <div class="trust-line">
+                    <i class="fa-solid fa-face-smile"></i>
+                    Нам доверяют <strong style="color:var(--teal-2);">15 клиник</strong> и
+                    <strong style="color:var(--teal-2);">200+ врачей</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         PREP MAP (главный блок)
+         ========================================================= -->
+    <section class="section" id="prep-map">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Ваш путь к операции</h2>
+                    <p class="section-lead">
+                        Отмечайте шаги — прогресс обновится. Чек-лист и самочувствие сохраняются на этом устройстве.
+                    </p>
+                </div>
+
+                <!-- Озвучивание блока -->
+                <button class="speak-btn" type="button" data-speak="#prep-map">
+                    <i class="fa-solid fa-volume-high"></i> Озвучить
+                </button>
+            </div>
+
+            <div class="prep-wrap">
+                <div class="prep-top">
+                    <div class="prep-meta">
+                        <!-- Donut диаграмма -->
+                        <div class="donut" aria-label="Диаграмма прогресса">
+                            <svg viewBox="0 0 120 120" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="tealGrad" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#40E0D0"></stop>
+                                        <stop offset="100%" stop-color="#2AA9A3"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="track" cx="60" cy="60" r="50"></circle>
+                                <circle class="progress" id="donutProgress" cx="60" cy="60" r="50"></circle>
+                            </svg>
+                            <div class="donut-center" id="donutCenterText">
+                                0%
+                                <small>выполнено</small>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="prep-meta-text" id="prepProgressText">
+                                <i class="fa-solid fa-star"></i> Выполнено 0 из 6 шагов
+                            </div>
+                            <div class="download-row">
+                                <button class="btn btn-soft" type="button" id="downloadMemoBtn">
+                                    📥 Скачать памятку
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="prep-progress" aria-label="Линейный прогресс">
+                    <div class="prep-progress__bar" id="prepProgressBar"></div>
+                </div>
+
+                <!-- Таймлайн -->
+                <div class="timeline" id="timeline" aria-label="Шаги подготовки">
+                    <!-- Заполняется JS -->
+                </div>
+
+                <!-- Детали + чек-лист + дневник -->
+                <div class="prep-detail">
+                    <div class="detail" id="detailBlock">
+                        <div class="detail-tag" id="detailTag"><i class="fa-solid fa-compass"></i> Текущий шаг</div>
+
+                        <div class="detail-title-row">
+                            <h3 class="detail-title" id="detailTitle">Шаг 1. Знакомство с куратором</h3>
+                            <!-- Озвучивание текста шага -->
+                            <button class="speak-btn" type="button" data-speak="#detailBlock" style="min-height:48px;padding:8px 12px;">
+                                <i class="fa-solid fa-volume-high"></i> 🔊
+                            </button>
+                        </div>
+
+                        <p class="detail-desc" id="detailDesc">Подробности шага появятся здесь.</p>
+
+                        <div class="detail-actions">
+                            <button class="btn btn-teal" type="button" id="completeStepBtn">
+                                <i class="fa-solid fa-check"></i> Я выполнил(а)
+                            </button>
+                            <button class="btn btn-ghost" type="button" id="askBtn">
+                                <i class="fa-solid fa-comments"></i> Спросить фельдшера
+                            </button>
+                        </div>
+
+                        <div class="help-text" id="helpText">
+                            📞 Если нужна помощь: <a href="tel:+78001234567" style="color:var(--teal-2);font-weight:900;">+7 800 123-45-67</a>
+                            · или откройте чат (кнопка 💬 внизу справа).
+                        </div>
+
+                        <div class="mood" style="margin-top:14px;">
+                            <p class="mood-title"><i class="fa-solid fa-face-smile"></i> Как вы себя чувствуете сегодня?</p>
+                            <div class="mood-actions" role="group" aria-label="Самочувствие">
+                                <button class="mood-btn" type="button" data-mood="good" aria-label="Хорошо">😊</button>
+                                <button class="mood-btn" type="button" data-mood="mid" aria-label="Средне">😐</button>
+                                <button class="mood-btn" type="button" data-mood="bad" aria-label="Плохо">😞</button>
+                            </div>
+                            <div class="mood-msg" id="moodMsg">Спасибо, ваш ответ сохранён.</div>
+                        </div>
+                    </div>
+
+                    <aside class="side" aria-label="Чек-лист шага">
+                        <h3><i class="fa-solid fa-clipboard-check"></i> Чек-лист шага</h3>
+                        <p class="note">Отмечайте пункты — они сохраняются (localStorage).</p>
+
+                        <div class="checklist" id="checklist"></div>
+
+                        <div class="side-footer">
+                            <span id="checkCount">0/0 отмечено</span>
+                            <button class="tiny-link" type="button" id="resetChecklistBtn">Сбросить</button>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         Демонстрационные секции для навигации
+         ========================================================= -->
+    <section class="section" id="prices" style="padding-top:0;">
+        <div class="container">
+            <div class="card" style="padding:18px;border-radius:24px;">
+                <div class="section-head" style="margin-bottom:10px;">
+                    <h2 class="section-title" style="font-size:1.6rem;">Цены</h2>
+                    <button class="speak-btn" type="button" data-speak="#prices" style="min-height:48px;padding:8px 12px;">
+                        <i class="fa-solid fa-volume-high"></i> Озвучить
+                    </button>
+                </div>
+                <p class="section-lead">Здесь обычно размещают тарифы сопровождения и варианты для клиник (демо-блок).</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="clinics" style="padding-top:0;">
+        <div class="container">
+            <div class="card" style="padding:18px;border-radius:24px;">
+                <div class="section-head" style="margin-bottom:10px;">
+                    <h2 class="section-title" style="font-size:1.6rem;">Клиники</h2>
+                    <button class="speak-btn" type="button" data-speak="#clinics" style="min-height:48px;padding:8px 12px;">
+                        <i class="fa-solid fa-volume-high"></i> Озвучить
+                    </button>
+                </div>
+                <p class="section-lead">Список клиник и города присутствия (демо-блок).</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="infohub" style="padding-top:0;">
+        <div class="container">
+            <div class="card" style="padding:18px;border-radius:24px;">
+                <div class="section-head" style="margin-bottom:10px;">
+                    <h2 class="section-title" style="font-size:1.6rem;">Инфоцентр</h2>
+                    <button class="speak-btn" type="button" data-speak="#infohub" style="min-height:48px;padding:8px 12px;">
+                        <i class="fa-solid fa-volume-high"></i> Озвучить
+                    </button>
+                </div>
+                <p class="section-lead">Памятки, инструкции и видео (демо-блок).</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         Для врачей + модалка "Подключить клинику"
+         ========================================================= -->
+    <!-- =========================================================
+     ПОДРОБНЫЙ ИНФО-БЛОК (добавляет больше информации для пациента и семьи)
+     Вставить перед <section class="section" id="doctors">
+     ========================================================= -->
+    <section class="section" id="more-info">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Подробно о сопровождении</h2>
+                    <p class="section-lead">
+                        Мы сделали этот блок максимально понятным для пациента и родственников: что входит в сопровождение,
+                        как проходит подготовка, что взять с собой и как обеспечивается связь с фельдшером.
+                    </p>
+                </div>
+
+                <!-- уже работает с твоим текущим JS (озвучивание) -->
+                <button class="speak-btn" type="button" data-speak="#more-info">
+                    <i class="fa-solid fa-volume-high"></i> Озвучить
+                </button>
+            </div>
+
+            <!-- Короткие преимущества / что входит -->
+            <div class="info-grid">
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-user-check"></i> Что получает пациент</h3>
+                    <ul class="list-check">
+                        <li><i class="fa-solid fa-check"></i><span>Пошаговую карту подготовки к операции с понятными задачами</span></li>
+                        <li><i class="fa-solid fa-bell"></i><span>Напоминания о лекарствах, анализах и консультациях</span></li>
+                        <li><i class="fa-solid fa-comments"></i><span>Связь с фельдшером в чате и по телефону</span></li>
+                        <li><i class="fa-solid fa-video"></i><span>Видео-консультации (в прототипе — демо-режим)</span></li>
+                    </ul>
+                </article>
+
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-people-roof"></i> Что получает семья</h3>
+                    <ul class="list-check">
+                        <li><i class="fa-solid fa-heart"></i><span>Понимание, на каком этапе подготовки находится близкий человек</span></li>
+                        <li><i class="fa-solid fa-user-plus"></i><span>Возможность быть доверенным лицом и помогать с организацией</span></li>
+                        <li><i class="fa-solid fa-headset"></i><span>Контактный канал связи, если нужно срочно уточнить инструкции</span></li>
+                        <li><i class="fa-solid fa-file-lines"></i><span>Памятка с шагами подготовки и списком документов</span></li>
+                    </ul>
+                </article>
+
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-shield-heart"></i> Спокойствие и безопасность</h3>
+                    <div class="badges-row" style="margin-bottom:10px;">
+                        <span class="badge"><i class="fa-solid fa-lock"></i> Защита данных</span>
+                        <span class="badge"><i class="fa-solid fa-clock"></i> Напоминания вовремя</span>
+                        <span class="badge"><i class="fa-solid fa-user-nurse"></i> Поддержка фельдшера</span>
+                    </div>
+                    <p>
+                        Интерфейс сделан крупным и простым: меньше лишнего, больше важных действий. Это снижает тревогу и помогает не забыть ключевые шаги перед операцией.
+                    </p>
+                    <div class="info-actions">
+                        <button class="btn btn-soft" type="button" data-open-modal="panic">
+                            🚨 Срочная помощь
+                        </button>
+                        <button class="btn btn-soft" type="button" data-open-modal="video">
+                            📹 Видеозвонок
+                        </button>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Подготовка по дням + что взять -->
+            <div class="split-grid" style="margin-top:14px;">
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-calendar-check"></i> Как обычно проходит подготовка (пример)</h3>
+                    <div class="timeline-mini">
+                        <div class="timeline-mini__item">
+                            <strong><i class="fa-solid fa-flag"></i> За 7–5 дней</strong>
+                            <p>Первичный контакт с куратором, сбор информации о лекарствах, уточнение плана подготовки и списка анализов.</p>
+                        </div>
+
+                        <div class="timeline-mini__item">
+                            <strong><i class="fa-solid fa-vials"></i> За 4–2 дня</strong>
+                            <p>Сдача анализов и отправка результатов. Фельдшер помогает проверить, всё ли готово и ничего ли не пропущено.</p>
+                        </div>
+
+                        <div class="timeline-mini__item">
+                            <strong><i class="fa-solid fa-utensils"></i> За 1 день</strong>
+                            <p>Напоминания по диете, режиму и документам. При необходимости — короткий созвон для уточнения вопросов.</p>
+                        </div>
+
+                        <div class="timeline-mini__item">
+                            <strong><i class="fa-solid fa-hospital-user"></i> В день операции</strong>
+                            <p>Контроль времени прибытия, организационная поддержка и быстрый канал связи с фельдшером/клиникой.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-suitcase-medical"></i> Что подготовить заранее</h3>
+                    <ul class="list-check">
+                        <li><i class="fa-solid fa-id-card"></i><span>Паспорт, полис, направление</span></li>
+                        <li><i class="fa-solid fa-file-medical"></i><span>Результаты анализов (бумажные или в телефоне)</span></li>
+                        <li><i class="fa-solid fa-pills"></i><span>Список лекарств с дозировками</span></li>
+                        <li><i class="fa-solid fa-mobile-screen-button"></i><span>Заряженный телефон и контакты фельдшера</span></li>
+                        <li><i class="fa-solid fa-shirt"></i><span>Личные вещи по рекомендации клиники</span></li>
+                    </ul>
+
+                    <div class="info-note">
+                        ⚠️ Важно: не меняйте схему лекарств самостоятельно. Любые изменения заранее согласуйте с врачом и фельдшером.
+                    </div>
+
+                    <div class="info-actions">
+                        <button class="btn btn-teal" type="button" data-scroll-to="#prep-map">
+                            <i class="fa-solid fa-map"></i> Открыть карту подготовки
+                        </button>
+                        <button class="btn btn-ghost" type="button" id="openChatFromInfo">
+                            <i class="fa-solid fa-comments"></i> Задать вопрос в чат
+                        </button>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Контакты и режим работы -->
+            <div class="info-grid" style="margin-top:14px;">
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-phone-volume"></i> Каналы связи</h3>
+                    <ul class="list-check">
+                        <li><i class="fa-solid fa-headset"></i><span><a href="tel:+78001234567">+7 800 123-45-67</a> — телефон поддержки</span></li>
+                        <li><i class="fa-solid fa-comments"></i><span>Чат внутри платформы (кнопка 💬 внизу справа)</span></li>
+                        <li><i class="fa-solid fa-video"></i><span>Видео-консультация по записи (в прототипе — демо)</span></li>
+                    </ul>
+                </article>
+
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-business-time"></i> Когда мы на связи</h3>
+                    <ul class="list-check">
+                        <li><i class="fa-solid fa-sun"></i><span>Плановые консультации: ежедневно 08:00–20:00</span></li>
+                        <li><i class="fa-solid fa-bell"></i><span>Напоминания: автоматически по вашему плану подготовки</span></li>
+                        <li><i class="fa-solid fa-triangle-exclamation"></i><span>Срочные вопросы: используйте кнопку «Срочная помощь»</span></li>
+                    </ul>
+                </article>
+
+                <article class="info-card">
+                    <h3><i class="fa-solid fa-file-shield"></i> Конфиденциальность</h3>
+                    <p>
+                        В рабочей версии сервиса данные пациента передаются по защищённым каналам и доступны только уполномоченным сотрудникам.
+                        В этом прототипе функции связи и чата демонстрационные.
+                    </p>
+                    <div class="info-actions">
+                        <a class="btn btn-soft" href="#faq">
+                            <i class="fa-solid fa-circle-question"></i> Частые вопросы
+                        </a>
+                        <button class="btn btn-soft" type="button" data-open-modal="relative">
+                            👨‍👩‍👦 Добавить родственника
+                        </button>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <section class="section" id="doctors">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Для врачей и клиник</h2>
+                    <p class="section-lead">Быстрый старт: оставьте заявку — мы свяжемся и подключим вашу клинику (демо).</p>
+                </div>
+
+                <button class="speak-btn" type="button" data-speak="#doctors">
+                    <i class="fa-solid fa-volume-high"></i> Озвучить
+                </button>
+            </div>
+
+            <div class="card" style="padding:18px;border-radius:24px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                    <p style="margin:0; color:var(--muted); font-weight:900; max-width:820px;">
+                        Панель куратора: прогресс пациентов, задачи, групповые встречи и контроль назначений.
+                    </p>
+                    <button class="btn btn-teal" type="button" data-open-modal="clinic">
+                        <i class="fa-solid fa-hospital"></i> Подключить клинику
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         FAQ
+         ========================================================= -->
+    <section class="section" id="faq">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Отвечаем на важные вопросы</h2>
+                    <p class="section-lead">Если не нашли ответ — откройте чат и напишите вопрос.</p>
+                </div>
+
+                <button class="speak-btn" type="button" data-speak="#faq">
+                    <i class="fa-solid fa-volume-high"></i> Озвучить
+                </button>
+            </div>
+
+            <div class="faq" id="faqAccordion">
+                <div class="faq-item">
+                    <button class="faq-q" type="button" aria-expanded="false">
+                        <span class="left"><i class="fa-solid fa-circle-question"></i> Как записаться на консультацию?</span>
+                        <i class="fa-solid fa-chevron-down chev"></i>
+                    </button>
+                    <div class="faq-a"><div class="faq-a__inner">Нажмите «Записаться» или напишите в чат. Мы предложим удобное время и способ связи.</div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-q" type="button" aria-expanded="false">
+                        <span class="left"><i class="fa-solid fa-circle-question"></i> Когда сдавать анализы?</span>
+                        <i class="fa-solid fa-chevron-down chev"></i>
+                    </button>
+                    <div class="faq-a"><div class="faq-a__inner">Сроки и условия указаны в «Карте подготовки». Обычно анализы сдают утром натощак — уточните в вашем шаге.</div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-q" type="button" aria-expanded="false">
+                        <span class="left"><i class="fa-solid fa-circle-question"></i> Что делать, если мне стало плохо?</span>
+                        <i class="fa-solid fa-chevron-down chev"></i>
+                    </button>
+                    <div class="faq-a"><div class="faq-a__inner">Нажмите «Срочная помощь» и позвоните фельдшеру. При сильном ухудшении самочувствия обратитесь за неотложной помощью.</div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-q" type="button" aria-expanded="false">
+                        <span class="left"><i class="fa-solid fa-circle-question"></i> Можно ли подключить родственника?</span>
+                        <i class="fa-solid fa-chevron-down chev"></i>
+                    </button>
+                    <div class="faq-a"><div class="faq-a__inner">Да. Нажмите «Добавить родственника» — отправим приглашение (демо-режим).</div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-q" type="button" aria-expanded="false">
+                        <span class="left"><i class="fa-solid fa-circle-question"></i> Это настоящий видеозвонок?</span>
+                        <i class="fa-solid fa-chevron-down chev"></i>
+                    </button>
+                    <div class="faq-a"><div class="faq-a__inner">В этом прототипе — демо-заглушка. В реальном продукте подключается WebRTC/провайдер видеосвязи.</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         Пациенты: доверенное лицо
+         ========================================================= -->
+    <section class="section" id="patients">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Для пациентов и семьи</h2>
+                    <p class="section-lead">Можно добавить доверенное лицо, чтобы родственник помогал контролировать подготовку.</p>
+                </div>
+                <button class="speak-btn" type="button" data-speak="#patients">
+                    <i class="fa-solid fa-volume-high"></i> Озвучить
+                </button>
+            </div>
+
+            <div class="patients-card card">
+                <p>Доверенное лицо сможет напоминать о шагах подготовки и быть на связи, если вам нужна помощь.</p>
+                <button class="btn btn-teal" type="button" data-open-modal="relative">
+                    👨‍👩‍👦 Добавить родственника
+                </button>
+            </div>
+        </div>
+    </section>
 </main>
 
-<footer class="site-footer">© <span id="year"></span> Окулус‑Фельдшер</footer>
+<!-- =========================================================
+     Footer
+     ========================================================= -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <h4>Oculus MD</h4>
+                <div>© <span id="year"></span></div>
+            </div>
+            <div>
+                <h4>Ссылки</h4>
+                <div style="display:grid; gap:6px;">
+                    <a href="#top">На главную</a>
+                    <a href="#">Политика конфиденциальности</a>
+                    <a href="#">Лицензии</a>
+                </div>
+            </div>
+            <div>
+                <h4>Контакты</h4>
+                <div style="display:grid; gap:6px;">
+                    <a href="tel:+78001234567">+7 800 123-45-67</a>
+                    <a href="mailto:hello@oculus-feldsher.ru">hello@oculus-feldsher.ru</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- =========================================================
+     ПАНИКА: фиксированная кнопка + модалка
+     ========================================================= -->
+<a class="panic-fixed" href="tel:+78001234567" aria-label="Срочная помощь">
+    🚨 Срочная помощь
+</a>
+
+<!-- =========================================================
+     FAB: быстрые действия (звонок / чат / напоминания / видеозвонок)
+     ========================================================= -->
+<div class="fab" id="fab">
+    <div class="fab-menu" aria-label="Быстрые действия">
+        <a href="tel:+78001234567"><i class="fa-solid fa-headset"></i> Позвонить</a>
+        <button type="button" id="fabChatBtn"><i class="fa-solid fa-comments"></i> 💬 Чат</button>
+        <button type="button" id="fabVideoBtn"><i class="fa-solid fa-video"></i> 📹 Видеозвонок</button>
+        <button type="button" id="fabReminderBtn"><i class="fa-solid fa-clock"></i> ⏰ Напоминания</button>
+    </div>
+    <button class="fab-main" id="fabToggleBtn" type="button" aria-label="Открыть быстрые действия">
+        <i class="fa-solid fa-comments"></i>
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+</div>
+
+<!-- =========================================================
+     ЧАТ-ПАНЕЛЬ (FAQ-бот)
+     ========================================================= -->
+<div class="chat-panel" id="chatPanel" aria-label="Чат с автоответчиком">
+    <div class="chat-head">
+        <strong>💬 Чат (демо-бот)</strong>
+        <button class="chat-close" type="button" id="closeChatBtn" aria-label="Закрыть чат">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <div class="chat-body" id="chatBody">
+        <!-- сообщения -->
+    </div>
+    <div class="chat-foot">
+        <input id="chatInput" type="text" placeholder="Напишите вопрос..." aria-label="Поле ввода сообщения" />
+        <button class="btn btn-teal" type="button" id="sendChatBtn" style="min-height:46px;padding:10px 14px;">Отправить</button>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Вход
+     ========================================================= -->
+<div class="modal" id="loginModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="modal__dialog">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="loginTitle">Вход</h3>
+                <p class="modal__sub">Демо-форма. Для входа введите телефон и пароль.</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <form id="loginForm" style="display:grid; gap:12px;" novalidate>
+                <div class="field">
+                    <label for="loginPhone">Телефон</label>
+                    <input id="loginPhone" type="tel" placeholder="+7 (___) ___-__-__" required />
+                </div>
+                <div class="field">
+                    <label for="loginPass">Пароль</label>
+                    <input id="loginPass" type="password" placeholder="Введите пароль" required />
+                </div>
+                <button class="btn btn-teal" type="submit">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Войти
+                </button>
+                <button class="btn btn-soft" type="button" id="smsLoginBtn">Войти по SMS</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Срочная помощь
+     ========================================================= -->
+<div class="modal" id="panicModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="panicTitle">
+    <div class="modal__dialog">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="panicTitle">🚨 Срочная помощь</h3>
+                <p class="modal__sub">Если вам плохо, немедленно позвоните фельдшеру.</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <div class="card" style="padding:16px;border-radius:24px;border:1px solid var(--line);box-shadow:var(--shadow-sm);">
+                <div style="font-size:1.6rem;font-weight:900; letter-spacing:-.02em;">
+                    +7 800 123-45-67
+                </div>
+                <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <a class="btn btn-teal" href="tel:+78001234567" style="text-decoration:none;">
+                        <i class="fa-solid fa-headset"></i> Позвонить сейчас
+                    </a>
+                    <button class="btn btn-ghost" type="button" data-close-modal>Закрыть</button>
+                </div>
+                <p style="margin:12px 0 0; color:var(--muted); font-weight:900;">
+                    Если состояние резко ухудшается — обратитесь за неотложной медицинской помощью.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Видеозвонок (демо)
+     ========================================================= -->
+<div class="modal" id="videoModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="videoTitle">
+    <div class="modal__dialog">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="videoTitle">📹 Видеозвонок (демо)</h3>
+                <p class="modal__sub">Здесь будет видеозвонок с фельдшером (демо-заглушка).</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <div class="video-box">
+                Демо-режим: здесь будет видеозвонок с фельдшером
+            </div>
+            <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                <button class="btn btn-teal" type="button" data-close-modal>
+                    <i class="fa-solid fa-phone-slash"></i> Завершить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Подключить клинику / врач (с валидацией ИНН/СНИЛС)
+     ========================================================= -->
+<div class="modal" id="clinicModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="clinicTitle">
+    <div class="modal__dialog" style="width:min(680px,100%);">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="clinicTitle">Подключить клинику / врача</h3>
+                <p class="modal__sub">Заполните форму — мы свяжемся с вами (демо).</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <form id="clinicForm" style="display:grid; gap:12px;" novalidate>
+                <div class="field" id="fClinicName">
+                    <label for="clinicName">Название клиники / ФИО врача</label>
+                    <input id="clinicName" type="text" placeholder="Клиника «Здоровье» / Иванов Иван Иванович" required />
+                    <div class="field-error" id="eClinicName"></div>
+                </div>
+
+                <div class="field" id="fInn">
+                    <label for="inn">ИНН *</label>
+                    <input id="inn" type="text" inputmode="numeric" autocomplete="off" placeholder="10 или 12 цифр" required />
+                    <div class="field-error" id="eInn"></div>
+                </div>
+
+                <div class="field" id="fSnils">
+                    <label for="snils">СНИЛС *</label>
+                    <input id="snils" type="text" inputmode="numeric" autocomplete="off" placeholder="11 цифр (можно с дефисами)" required />
+                    <div class="field-error" id="eSnils"></div>
+                </div>
+
+                <div class="field" id="fClinicPhone">
+                    <label for="clinicPhone">Контактный телефон</label>
+                    <input id="clinicPhone" type="tel" placeholder="+7 (___) ___-__-__" required />
+                    <div class="field-error" id="eClinicPhone"></div>
+                </div>
+
+                <div class="field" id="fClinicEmail">
+                    <label for="clinicEmail">Email</label>
+                    <input id="clinicEmail" type="email" placeholder="name@clinic.ru" required />
+                    <div class="field-error" id="eClinicEmail"></div>
+                </div>
+
+                <button class="btn btn-teal" type="submit">
+                    <i class="fa-solid fa-paper-plane"></i> Отправить заявку
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Добавить родственника (доверенное лицо)
+     ========================================================= -->
+<div class="modal" id="relativeModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="relativeTitle">
+    <div class="modal__dialog">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="relativeTitle">👨‍👩‍👦 Добавить родственника</h3>
+                <p class="modal__sub">Введите телефон родственника — отправим приглашение (демо).</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <form id="relativeForm" style="display:grid; gap:12px;" novalidate>
+                <div class="field" id="fRelPhone">
+                    <label for="relPhone">Телефон родственника</label>
+                    <input id="relPhone" type="tel" placeholder="+7 (___) ___-__-__" required />
+                    <div class="field-error" id="eRelPhone"></div>
+                </div>
+                <button class="btn btn-teal" type="submit">
+                    <i class="fa-solid fa-paper-plane"></i> Отправить приглашение
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-(() => {
-  const operationTemplates = {
-    "Факоэмульсификация": ["Анализ крови: глюкоза, гемоглобин", "ЭКГ с расшифровкой", "Флюорография", "Осмотр терапевта", "Бакпосев из глаза", "Расчет ИОЛ"],
-    "Антиглаукоматозная операция": ["Анализ крови: глюкоза, гемоглобин", "ЭКГ с расшифровкой", "Осмотр терапевта", "ОКТ/тонометрия", "Бакпосев из глаза", "Расчет ИОЛ"],
-    "Витреоретинальная операция": ["Анализ крови", "ЭКГ", "Флюорография", "Осмотр терапевта", "Фото глазного дна", "Расчет ИОЛ"]
-  };
+    /* =========================================================
+       ОКУЛУС ФЕЛЬДШЕР — ЧИСТЫЙ JS
+       Функции:
+       - Карта подготовки (шаги/прогресс/чек-лист)
+       - Donut диаграмма
+       - Дневник самочувствия (localStorage)
+       - Скачать памятку (Blob)
+       - Модальные окна (вход, клиника, родственник, паника, видео)
+       - Валидация ИНН/СНИЛС
+       - FAQ аккордеон
+       - Голосовое озвучивание (SpeechSynthesis)
+       - Голосовой ввод (SpeechRecognition)
+       - Упрощённый режим + Крупнее (a11y)
+       - Чат-бот (по ключевым словам)
+       ========================================================= */
+    (function(){
+      "use strict";
 
-  const defaultPatients = [
-    { id: "P-001", fio: "Иванов Сергей", district: "Каменский", diagnosis: "H25.0", snils: "123-456-789 11", policy: "ОМС-90872", operation: "Факоэмульсификация", status: "yellow", stage: 2, surgeryDate: "", surgeonComment: "", checklist: {}, files: {}, iol: null },
-    { id: "P-002", fio: "Петрова Анна", district: "Талицкий", diagnosis: "H40.1", snils: "321-654-987 33", policy: "ОМС-44122", operation: "Антиглаукоматозная операция", status: "red", stage: 1, surgeryDate: "", surgeonComment: "Нужна консультация эндокринолога (глюкоза > 10).", checklist: {}, files: {}, iol: null },
-    { id: "P-003", fio: "Смирнов Дмитрий", district: "Шалинский", diagnosis: "H25.8", snils: "555-123-121 77", policy: "ОМС-00155", operation: "Факоэмульсификация", status: "green", stage: 3, surgeryDate: "2026-05-15", surgeonComment: "Готов к операции.", checklist: {}, files: {}, iol: null }
-  ];
+      const LS = {
+        prep: "of_prep_v2",
+        checklist: "of_checklist_v2",
+        mood: "of_mood_v1",
+        a11y: "of_a11y_v1",
+        simple: "of_simple_v1"
+      };
 
-  const state = {
-    role: localStorage.getItem("role") || "f",
-    selectedPatient: localStorage.getItem("selectedPatient") || "P-001",
-    offlineQueue: JSON.parse(localStorage.getItem("offlineQueue") || "[]"),
-    online: navigator.onLine,
-    patients: JSON.parse(localStorage.getItem("patients") || "null") || defaultPatients
-  };
+      /* ------------------------------
+         ДАННЫЕ ШАГОВ
+         ------------------------------ */
+      const steps = [
+        {
+          id:"intro",
+          short:"Знакомство",
+          icon:"fa-handshake-angle",
+          title:"Шаг 1. Знакомство с куратором",
+          desc:"Короткий звонок/чат с фельдшером. Подготовьте список лекарств и вопросы, чтобы ничего не забыть.",
+          checklist:["Подготовить паспорт и полис","Список лекарств (название/дозировка)","Записать вопросы"]
+        },
+        {
+          id:"tests",
+          short:"Анализы",
+          icon:"fa-vials",
+          title:"Шаг 2. Сдать анализы",
+          desc:"Завтра с 8:00 до 10:00 сдайте кровь. Возьмите паспорт и полис. Приходите натощак, воду можно.",
+          checklist:["Поставить будильник","Паспорт и полис готовы","Не завтракать перед анализами"]
+        },
+        {
+          id:"diet",
+          short:"Диета",
+          icon:"fa-mug-hot",
+          title:"Шаг 3. Подготовительная диета",
+          desc:"Соблюдайте щадящую диету (как указано врачом). Если есть вопросы — напишите фельдшеру в чат.",
+          checklist:["План питания на 2 дня","Убрать тяжёлую пищу","Пить воду (если можно)"]
+        },
+        {
+          id:"meds",
+          short:"Лекарства",
+          icon:"fa-pills",
+          title:"Шаг 4. Согласовать лекарства",
+          desc:"Ничего не отменяйте самостоятельно. Фельдшер уточнит рекомендации врача по вашим препаратам.",
+          checklist:["Сфотографировать упаковки","Подтвердить список в чате","Отметить изменения расписания"]
+        },
+        {
+          id:"docs",
+          short:"Документы",
+          icon:"fa-folder-open",
+          title:"Шаг 5. Подготовить документы",
+          desc:"Соберите документы в папку: паспорт, полис, анализы, направление, список назначений.",
+          checklist:["Паспорт и полис в папке","Анализы распечатать/сохранить","Проверить направление"]
+        },
+        {
+          id:"dayx",
+          short:"День Х",
+          icon:"fa-flag-checkered",
+          title:"Шаг 6. День операции",
+          desc:"Следуйте инструкции по времени приезда. Фельдшер поможет с организационными вопросами.",
+          checklist:["Проверить время выезда","Взять документы и вещи","Сообщить о прибытии"]
+        }
+      ];
 
-  function save() {
-    localStorage.setItem("patients", JSON.stringify(state.patients));
-    localStorage.setItem("role", state.role);
-    localStorage.setItem("selectedPatient", state.selectedPatient);
-    localStorage.setItem("offlineQueue", JSON.stringify(state.offlineQueue));
-  }
+      /* ------------------------------
+         DOM
+         ------------------------------ */
+      const yearEl = document.getElementById("year");
+      const toast = document.getElementById("toast");
 
-  const badge = (status) => `<span class="badge ${status}">${status === "red" ? "Красный" : status === "yellow" ? "Желтый" : "Зеленый"}</span>`;
-  const getPatient = () => state.patients.find(p => p.id === state.selectedPatient) || state.patients[0];
+      // Nav / burger
+      const burgerBtn = document.getElementById("burgerBtn");
+      const mainNav = document.getElementById("mainNav");
 
-  const statusFromChecklist = (patient) => {
-    const items = operationTemplates[patient.operation] || [];
-    const done = items.filter(i => patient.checklist[i]).length;
-    if (done === items.length && done > 0) return "green";
-    if (done === 0) return "red";
-    return "yellow";
-  };
+      // Modes
+      const toggleA11yBtn = document.getElementById("toggleA11yBtn");
+      const toggleSimpleBtn = document.getElementById("toggleSimpleBtn");
 
-  function calcIOL({k1, k2, acd, axial, aConst}) {
-    const meanK = (k1 + k2) / 2;
-    const srkT = aConst - 2.5 * axial - 0.9 * meanK;
-    const haigis = (0.1 * (aConst - 118)) + (0.4 * acd) - (2.2 * axial) + 95 - meanK;
-    return { srkT: srkT.toFixed(2), haigis: haigis.toFixed(2) };
-  }
+      // Hero search
+      const searchInput = document.getElementById("searchInput");
+      const searchBtn = document.getElementById("searchBtn");
+      const voiceInputBtn = document.getElementById("voiceInputBtn");
 
-  function queueOrApply(action, title) {
-    if (state.online) {
-      action();
-    } else {
-      state.offlineQueue.push({ ts: Date.now(), label: title || "update" });
-      action();
-    }
-    save();
-    render();
-  }
+      // Prep UI
+      const timelineEl = document.getElementById("timeline");
+      const prepProgressText = document.getElementById("prepProgressText");
+      const prepProgressBar = document.getElementById("prepProgressBar");
+      const donutProgress = document.getElementById("donutProgress");
+      const donutCenterText = document.getElementById("donutCenterText");
 
-  function syncQueue() {
-    if (!state.online || state.offlineQueue.length === 0) return;
-    state.offlineQueue = [];
-    save();
-  }
+      const detailTag = document.getElementById("detailTag");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailDesc = document.getElementById("detailDesc");
+      const completeStepBtn = document.getElementById("completeStepBtn");
+      const askBtn = document.getElementById("askBtn");
+      const helpText = document.getElementById("helpText");
 
-  function renderF() {
-    const container = document.getElementById("viewF");
-    const p = getPatient();
-    const template = operationTemplates[p.operation] || [];
+      const checklistEl = document.getElementById("checklist");
+      const checkCountEl = document.getElementById("checkCount");
+      const resetChecklistBtn = document.getElementById("resetChecklistBtn");
 
-    container.innerHTML = `
-      <div class="card">
-        <h2>Панель районного офтальмолога</h2>
-        <div class="pill small">Сеть: <b>${state.online ? "онлайн" : "оффлайн"}</b>. Несинхронизированных изменений: <b>${state.offlineQueue.length}</b></div>
-        <table>
-          <thead><tr><th>ID</th><th>ФИО</th><th>Район</th><th>МКБ‑10</th><th>Статус</th></tr></thead>
-          <tbody>
-            ${state.patients.map(row => `
-              <tr>
-                <td><button data-pid="${row.id}" class="btn btn-ghost">${row.id}</button></td>
-                <td>${row.fio}</td>
-                <td>${row.district}</td>
-                <td>${row.diagnosis}</td>
-                <td>${badge(row.status)}</td>
-              </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
+      const downloadMemoBtn = document.getElementById("downloadMemoBtn");
 
-      <div class="card">
-        <h2>Карточка пациента ${p.fio}</h2>
-        <div class="field-row small">
-          <div><b>СНИЛС:</b> ${p.snils}</div>
-          <div><b>Полис (ЕМИАС‑заглушка):</b> ${p.policy}</div>
-          <div><b>Тип операции:</b> ${p.operation}</div>
-          <div><b>Комментарий хирурга:</b> ${p.surgeonComment || "—"}</div>
-        </div>
+      // Mood
+      const moodMsg = document.getElementById("moodMsg");
+      const moodButtons = Array.from(document.querySelectorAll(".mood-btn"));
 
-        <h3>Чек‑лист подготовки</h3>
-        ${template.map(item => `
-          <div class="check-item">
-            <div class="check-head">
-              <label><input type="checkbox" data-check="${item}" ${p.checklist[item] ? "checked" : ""}> ${item}</label>
-              <span class="muted small">${p.files[item] ? "Файл: " + p.files[item] : "Файл не загружен"}</span>
-            </div>
-            <div class="small muted">Добавить файл/заключение: <input data-file="${item}" placeholder="имя файла.pdf / фото.jpg" value="${p.files[item] || ""}" /></div>
-          </div>`).join("")}
+      // FAQ
+      const faqAccordion = document.getElementById("faqAccordion");
 
-        <h3>Калькулятор ИОЛ</h3>
-        <div class="field-row-4 small">
-          <input id="k1" placeholder="K1" type="number" step="0.01" />
-          <input id="k2" placeholder="K2" type="number" step="0.01" />
-          <input id="acd" placeholder="ACD" type="number" step="0.01" />
-          <input id="axial" placeholder="Осевая длина" type="number" step="0.01" />
-        </div>
-        <div class="field-row small" style="margin-top:8px;">
-          <input id="aconst" placeholder="A‑constant" type="number" step="0.01" value="118.4" />
-          <button id="calcIol" class="btn btn-primary">Рассчитать SRK/T и Haigis</button>
-        </div>
-        <div class="small" id="iolResult">${p.iol ? `SRK/T: <b>${p.iol.srkT} D</b>, Haigis: <b>${p.iol.haigis} D</b>` : "Расчет пока не выполнен"}</div>
-      </div>
-    `;
+      // Chat
+      const chatPanel = document.getElementById("chatPanel");
+      const chatBody = document.getElementById("chatBody");
+      const chatInput = document.getElementById("chatInput");
+      const sendChatBtn = document.getElementById("sendChatBtn");
+      const closeChatBtn = document.getElementById("closeChatBtn");
 
-    container.querySelectorAll("[data-pid]").forEach(el => el.onclick = () => { state.selectedPatient = el.dataset.pid; save(); render(); });
-    container.querySelectorAll("[data-check]").forEach(el => el.onchange = () => {
-      const item = el.dataset.check;
-      queueOrApply(() => {
-        p.checklist[item] = el.checked;
-        p.status = statusFromChecklist(p);
-        p.stage = p.status === "green" ? 2 : p.status === "yellow" ? 2 : 1;
-      }, "checklist");
-    });
-    container.querySelectorAll("[data-file]").forEach(el => el.onchange = () => {
-      const item = el.dataset.file;
-      queueOrApply(() => { p.files[item] = el.value.trim(); }, "file");
-    });
+      const openChatFromHero = document.getElementById("openChatFromHero");
+      const openVideoFromHero = document.getElementById("openVideoFromHero");
 
-    document.getElementById("calcIol").onclick = () => {
-      const k1 = parseFloat(document.getElementById("k1").value);
-      const k2 = parseFloat(document.getElementById("k2").value);
-      const acd = parseFloat(document.getElementById("acd").value);
-      const axial = parseFloat(document.getElementById("axial").value);
-      const aConst = parseFloat(document.getElementById("aconst").value);
-      if ([k1, k2, acd, axial, aConst].some(v => Number.isNaN(v))) {
-        alert("Заполните параметры глаза");
-        return;
+      // FAB
+      const fab = document.getElementById("fab");
+      const fabToggleBtn = document.getElementById("fabToggleBtn");
+      const fabChatBtn = document.getElementById("fabChatBtn");
+      const fabVideoBtn = document.getElementById("fabVideoBtn");
+      const fabReminderBtn = document.getElementById("fabReminderBtn");
+
+      // Modals
+      const openLoginBtn = document.getElementById("openLoginBtn");
+      const loginForm = document.getElementById("loginForm");
+      const smsLoginBtn = document.getElementById("smsLoginBtn");
+
+      const clinicForm = document.getElementById("clinicForm");
+      const relativeForm = document.getElementById("relativeForm");
+
+      /* ------------------------------
+         STATE (localStorage)
+         ------------------------------ */
+      let prepState = { completedCount: 1, previewIndex: 1 }; // приятный старт
+      let checklistState = {}; // { stepId: [true/false...] }
+
+      function safeParse(v, fallback){
+        try{ return JSON.parse(v) ?? fallback; }catch{ return fallback; }
       }
-      queueOrApply(() => {
-        p.iol = calcIOL({k1, k2, acd, axial, aConst});
-        p.checklist["Расчет ИОЛ"] = true;
-        p.status = statusFromChecklist(p);
-      }, "iol");
-    };
-  }
 
-  function renderS() {
-    const container = document.getElementById("viewS");
-    container.innerHTML = `
-      <div class="card">
-        <h2>Кабинет хирурга (модерация)</h2>
-        <table>
-          <thead><tr><th>ID</th><th>Пациент</th><th>Район</th><th>Статус</th><th>Дата операции</th><th>Действие</th></tr></thead>
-          <tbody>
-            ${state.patients.map(p => `
-              <tr>
-                <td>${p.id}</td>
-                <td>${p.fio}</td>
-                <td>${p.district}</td>
-                <td>${badge(p.status)}</td>
-                <td><input data-date="${p.id}" type="date" value="${p.surgeryDate || ""}" /></td>
-                <td>
-                  <button class="btn btn-primary" data-ok="${p.id}">Подтвердить</button>
-                  <button class="btn btn-ghost" data-req="${p.id}">Дообследование</button>
-                </td>
-              </tr>
-              <tr><td colspan="6"><textarea data-comment="${p.id}" placeholder="Комментарий районному коллеге">${p.surgeonComment || ""}</textarea></td></tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>`;
+      function loadState(){
+        const savedPrep = safeParse(localStorage.getItem(LS.prep), null);
+        if (savedPrep && typeof savedPrep.completedCount==="number" && typeof savedPrep.previewIndex==="number"){
+          prepState.completedCount = Math.max(0, Math.min(steps.length, savedPrep.completedCount));
+          prepState.previewIndex = Math.max(0, Math.min(steps.length-1, savedPrep.previewIndex));
+        }
 
-    container.querySelectorAll("[data-date]").forEach(el => el.onchange = () => {
-      const p = state.patients.find(x => x.id === el.dataset.date);
-      queueOrApply(() => { p.surgeryDate = el.value; if (el.value) p.stage = 3; }, "date");
-    });
-    container.querySelectorAll("[data-comment]").forEach(el => el.onchange = () => {
-      const p = state.patients.find(x => x.id === el.dataset.comment);
-      queueOrApply(() => { p.surgeonComment = el.value; }, "comment");
-    });
-    container.querySelectorAll("[data-ok]").forEach(el => el.onclick = () => {
-      const p = state.patients.find(x => x.id === el.dataset.ok);
-      queueOrApply(() => {
-        p.status = "green";
-        p.stage = 3;
-        if (!p.surgeryDate) p.surgeryDate = new Date(Date.now() + 1000 * 3600 * 24 * 14).toISOString().slice(0, 10);
-      }, "approve");
-    });
-    container.querySelectorAll("[data-req]").forEach(el => el.onclick = () => {
-      const p = state.patients.find(x => x.id === el.dataset.req);
-      queueOrApply(() => {
-        p.status = "red";
-        p.stage = 1;
-        if (!p.surgeonComment) p.surgeonComment = "Требуется дополнительная консультация.";
-      }, "reject");
-    });
-  }
+        const savedChecklist = safeParse(localStorage.getItem(LS.checklist), null);
+        if (savedChecklist && typeof savedChecklist==="object"){
+          checklistState = savedChecklist;
+        }
 
-  function renderP() {
-    const p = getPatient();
-    const container = document.getElementById("viewP");
-    container.innerHTML = `
-      <div class="card">
-        <h2>Пациентский интерфейс</h2>
-        <div class="small muted">Вход по короткому коду (MVP): <b>${p.id}</b></div>
-        <div style="margin:8px 0;">Текущий статус: ${badge(p.status)}</div>
-        <ul class="timeline">
-          <li><b>Этап 1:</b> Анализы в районной поликлинике — ${p.stage > 1 ? "завершено" : "в процессе"}</li>
-          <li><b>Этап 2:</b> Проверка хирургом — ${p.stage > 2 ? "завершено" : "ожидание"}</li>
-          <li><b>Этап 3:</b> Операция ${p.surgeryDate ? "назначена на " + p.surgeryDate : "еще не назначена"}</li>
-        </ul>
-        <div class="small muted">Telegram‑бот и видеоконсультация подключаются как внешние модули (MVP‑заглушка).</div>
-        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-          <button id="tgPing" class="btn btn-primary">Проверить Telegram</button>
-          <button id="printRoute" class="btn btn-ghost">Печать маршрутизации</button>
-        </div>
-      </div>
-    `;
+        const savedMood = localStorage.getItem(LS.mood);
+        if (savedMood){
+          moodButtons.forEach(b => b.classList.toggle("is-selected", b.dataset.mood===savedMood));
+        }
 
-    document.getElementById("tgPing").onclick = () => alert("Telegram: напоминание отправлено пациенту.");
-    document.getElementById("printRoute").onclick = () => {
-      const route = `Лист маршрутизации\nПациент: ${p.fio}\nОперация: ${p.operation}\nСтатус: ${p.status}\nДата операции: ${p.surgeryDate || "не назначена"}`;
-      const w = window.open("", "_blank");
-      if (!w) return;
-      w.document.write(`<pre>${route}</pre>`);
-      w.print();
-    };
-  }
+        const a11yOn = localStorage.getItem(LS.a11y)==="1";
+        document.body.classList.toggle("a11y-mode", a11yOn);
+        toggleA11yBtn.setAttribute("aria-pressed", String(a11yOn));
 
-  function render() {
-    document.getElementById("viewF").style.display = state.role === "f" ? "grid" : "none";
-    document.getElementById("viewS").style.display = state.role === "s" ? "grid" : "none";
-    document.getElementById("viewP").style.display = state.role === "p" ? "grid" : "none";
+        const simpleOn = localStorage.getItem(LS.simple)==="1";
+        document.body.classList.toggle("simple-mode", simpleOn);
+        toggleSimpleBtn.setAttribute("aria-pressed", String(simpleOn));
+      }
 
-    document.getElementById("roleF").classList.toggle("active-role", state.role === "f");
-    document.getElementById("roleS").classList.toggle("active-role", state.role === "s");
-    document.getElementById("roleP").classList.toggle("active-role", state.role === "p");
+      function savePrep(){ localStorage.setItem(LS.prep, JSON.stringify(prepState)); }
+      function saveChecklist(){ localStorage.setItem(LS.checklist, JSON.stringify(checklistState)); }
 
-    if (state.role === "f") renderF();
-    if (state.role === "s") renderS();
-    if (state.role === "p") renderP();
-  }
+      /* ------------------------------
+         TOAST
+         ------------------------------ */
+      function showToast(msg){
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(()=>toast.classList.remove("show"), 2200);
+      }
 
-  document.getElementById("roleF").onclick = () => { state.role = "f"; save(); render(); };
-  document.getElementById("roleS").onclick = () => { state.role = "s"; save(); render(); };
-  document.getElementById("roleP").onclick = () => { state.role = "p"; save(); render(); };
-  document.getElementById("jumpToApp").onclick = () => document.getElementById("appRoot").scrollIntoView({ behavior: "smooth" });
+      /* ------------------------------
+         NAV burger
+         ------------------------------ */
+      function toggleBurger(force){
+        if (!mainNav) return;
+        const open = typeof force==="boolean" ? force : !mainNav.classList.contains("is-open");
+        mainNav.classList.toggle("is-open", open);
+        burgerBtn?.setAttribute("aria-expanded", String(open));
+        const icon = burgerBtn?.querySelector("i");
+        if (icon) icon.className = open ? "fa-solid fa-xmark" : "fa-solid fa-bars";
+      }
+      burgerBtn?.addEventListener("click", ()=>toggleBurger());
+      document.addEventListener("click", (e)=>{
+        if (!mainNav || !burgerBtn) return;
+        if (!mainNav.contains(e.target) && !burgerBtn.contains(e.target) && mainNav.classList.contains("is-open")){
+          toggleBurger(false);
+        }
+      });
 
-  window.addEventListener("online", () => { state.online = true; syncQueue(); render(); });
-  window.addEventListener("offline", () => { state.online = false; save(); render(); });
+      /* ------------------------------
+         Scroll triggers
+         ------------------------------ */
+      document.addEventListener("click", (e)=>{
+        const t = e.target.closest("[data-scroll-to]");
+        if (!t) return;
+        const sel = t.getAttribute("data-scroll-to");
+        const el = document.querySelector(sel);
+        if (el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
+      });
 
-  document.getElementById("year").textContent = new Date().getFullYear();
-  render();
-})();
+      /* =========================================================
+         PREP MAP: render
+         ========================================================= */
+      function currentIndex(){
+        return Math.min(steps.length-1, prepState.completedCount);
+      }
+      function previewIndexSafe(){
+        return Math.max(0, Math.min(steps.length-1, prepState.previewIndex));
+      }
+
+      function ensureChecklist(step){
+        if (!Array.isArray(checklistState[step.id]) || checklistState[step.id].length !== step.checklist.length){
+          checklistState[step.id] = step.checklist.map(()=>false);
+          saveChecklist();
+        }
+      }
+
+      function renderProgress(){
+        const done = prepState.completedCount;
+        const total = steps.length;
+        const percent = Math.round((done/total)*100);
+
+        prepProgressText.innerHTML = `<i class="fa-solid fa-star"></i> Выполнено ${done} из ${total} шагов`;
+        prepProgressBar.style.width = percent + "%";
+
+        // Donut: окружность r=50 => длина ~ 314
+        const circumference = 314;
+        const offset = circumference - (circumference * percent / 100);
+        donutProgress.style.strokeDasharray = String(circumference);
+        donutProgress.style.strokeDashoffset = String(offset);
+
+        donutCenterText.innerHTML = `${percent}%<small>выполнено</small>`;
+      }
+
+      function renderTimeline(){
+        timelineEl.innerHTML = "";
+        const cur = currentIndex();
+        const prev = previewIndexSafe();
+
+        steps.forEach((s, idx)=>{
+          const wrap = document.createElement("div");
+          wrap.className = "step";
+          if (idx < prepState.completedCount) wrap.classList.add("is-done");
+          else if (idx === cur && prepState.completedCount < steps.length) wrap.classList.add("is-current");
+          else wrap.classList.add("is-future");
+          if (idx === prev) wrap.classList.add("is-preview");
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "step-btn";
+          btn.setAttribute("aria-label", `Открыть шаг ${idx+1}: ${s.short}`);
+          btn.innerHTML = `
+            <span class="step-num">${idx+1}</span>
+            <i class="fa-solid ${s.icon} step-icon" aria-hidden="true"></i>
+            <span class="step-name">${s.short}</span>
+            <span class="step-hint"><i class="fa-solid fa-video"></i> Смотреть</span>
+          `;
+          btn.addEventListener("click", ()=>{
+            prepState.previewIndex = idx;
+            savePrep();
+            renderTimeline();
+            renderDetail();
+          });
+
+          wrap.appendChild(btn);
+          timelineEl.appendChild(wrap);
+        });
+      }
+
+      function renderDetail(){
+        const idx = previewIndexSafe();
+        const step = steps[idx];
+        const done = idx < prepState.completedCount;
+        const cur = idx === currentIndex() && prepState.completedCount < steps.length;
+        const allDone = prepState.completedCount >= steps.length;
+
+        ensureChecklist(step);
+
+        if (allDone) detailTag.innerHTML = `<i class="fa-solid fa-stars"></i> Все шаги выполнены`;
+        else if (cur) detailTag.innerHTML = `<i class="fa-solid fa-compass"></i> Текущий шаг`;
+        else if (done) detailTag.innerHTML = `<i class="fa-solid fa-check"></i> Выполненный шаг`;
+        else detailTag.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> Предстоящий шаг`;
+
+        detailTitle.textContent = step.title;
+        detailDesc.textContent = step.desc;
+        helpText.classList.remove("show");
+
+        if (allDone){
+          completeStepBtn.disabled = true;
+          completeStepBtn.style.opacity = "0.7";
+          completeStepBtn.innerHTML = `<i class="fa-solid fa-check-double"></i> Подготовка завершена`;
+        } else if (idx !== currentIndex()){
+          completeStepBtn.disabled = true;
+          completeStepBtn.style.opacity = "0.7";
+          completeStepBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Отметьте текущий шаг`;
+        } else {
+          completeStepBtn.disabled = false;
+          completeStepBtn.style.opacity = "1";
+          completeStepBtn.innerHTML = `<i class="fa-solid fa-check"></i> Я выполнил(а)`;
+        }
+
+        renderChecklist(step);
+      }
+
+      function renderChecklist(step){
+        checklistEl.innerHTML = "";
+        const checks = checklistState[step.id];
+        let checked = 0;
+
+        step.checklist.forEach((text, i)=>{
+          const id = `chk_${step.id}_${i}`;
+          const isOn = !!checks[i];
+          if (isOn) checked++;
+
+          const row = document.createElement("div");
+          row.className = "check-item" + (isOn ? " is-checked" : "");
+          row.innerHTML = `
+            <input type="checkbox" id="${id}" data-i="${i}" ${isOn ? "checked" : ""} />
+            <label for="${id}">${text}</label>
+          `;
+          checklistEl.appendChild(row);
+        });
+
+        checkCountEl.textContent = `${checked}/${step.checklist.length} отмечено`;
+      }
+
+      checklistEl.addEventListener("change", (e)=>{
+        const input = e.target.closest('input[type="checkbox"]');
+        if (!input) return;
+
+        const idx = previewIndexSafe();
+        const step = steps[idx];
+        ensureChecklist(step);
+
+        const i = Number(input.dataset.i);
+        checklistState[step.id][i] = input.checked;
+        saveChecklist();
+        renderChecklist(step);
+      });
+
+      resetChecklistBtn.addEventListener("click", ()=>{
+        const step = steps[previewIndexSafe()];
+        checklistState[step.id] = step.checklist.map(()=>false);
+        saveChecklist();
+        renderChecklist(step);
+        showToast("Чек-лист сброшен.");
+      });
+
+      completeStepBtn.addEventListener("click", ()=>{
+        if (prepState.completedCount >= steps.length){
+          showToast("Все шаги уже выполнены 🌟");
+          return;
+        }
+        if (prepState.previewIndex !== currentIndex()){
+          showToast("Откройте текущий шаг, чтобы отметить выполнение.");
+          return;
+        }
+        prepState.completedCount = Math.min(steps.length, prepState.completedCount + 1);
+        prepState.previewIndex = Math.min(steps.length-1, prepState.completedCount);
+        savePrep();
+        renderAll();
+        showToast("Шаг отмечен как выполненный ✅");
+      });
+
+      askBtn.addEventListener("click", ()=>{
+        helpText.classList.toggle("show");
+        showToast("Открываем помощь: можно позвонить или написать в чат.");
+      });
+
+      function renderAll(){
+        renderProgress();
+        renderTimeline();
+        renderDetail();
+      }
+
+      /* =========================================================
+         MOOD (Дневник самочувствия)
+         ========================================================= */
+      moodButtons.forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const mood = btn.dataset.mood;
+          localStorage.setItem(LS.mood, mood);
+          moodButtons.forEach(b=>b.classList.toggle("is-selected", b===btn));
+          moodMsg.classList.add("show");
+          clearTimeout(moodMsg._t);
+          moodMsg._t = setTimeout(()=>moodMsg.classList.remove("show"), 1800);
+        });
+      });
+
+      /* =========================================================
+         Скачать памятку (Blob -> .txt)
+         ========================================================= */
+      downloadMemoBtn.addEventListener("click", ()=>{
+        const done = prepState.completedCount;
+        const total = steps.length;
+
+        let text = "";
+        text += "Oculus MD — памятка подготовки к операции\n";
+        text += "=============================================\n\n";
+        text += `Прогресс: выполнено ${done} из ${total} шагов\n\n`;
+
+        steps.forEach((s, idx)=>{
+          const status = idx < done ? "✅ Выполнено" : (idx === currentIndex() ? "🟦 Текущий шаг" : "⬜ Будущий шаг");
+          text += `${idx+1}. ${s.title}\n`;
+          text += `Статус: ${status}\n`;
+          text += `${s.desc}\n`;
+          text += "Чек-лист:\n";
+          const arr = checklistState[s.id] || s.checklist.map(()=>false);
+          s.checklist.forEach((it, i)=>{
+            text += `  - ${arr[i] ? "[x]" : "[ ]"} ${it}\n`;
+          });
+          text += "\n";
+        });
+
+        const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "oculus-feldsher_pamyatka.txt";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast("Памятка скачана.");
+      });
+
+      /* =========================================================
+         FAQ accordion
+         ========================================================= */
+      function closeAllFaq(){
+        faqAccordion.querySelectorAll(".faq-item").forEach(item=>{
+          const q = item.querySelector(".faq-q");
+          const a = item.querySelector(".faq-a");
+          item.classList.remove("is-open");
+          q?.setAttribute("aria-expanded","false");
+          if (a) a.style.maxHeight = "0px";
+        });
+      }
+
+      faqAccordion.addEventListener("click",(e)=>{
+        const btn = e.target.closest(".faq-q");
+        if (!btn) return;
+        const item = btn.closest(".faq-item");
+        const ans = item?.querySelector(".faq-a");
+        if (!item || !ans) return;
+
+        const isOpen = item.classList.contains("is-open");
+        closeAllFaq();
+        if (!isOpen){
+          item.classList.add("is-open");
+          btn.setAttribute("aria-expanded","true");
+          ans.style.maxHeight = ans.scrollHeight + "px";
+        }
+      });
+
+      // открыть первый
+      (function(){
+        const first = faqAccordion.querySelector(".faq-item");
+        if (!first) return;
+        const btn = first.querySelector(".faq-q");
+        const ans = first.querySelector(".faq-a");
+        first.classList.add("is-open");
+        btn?.setAttribute("aria-expanded","true");
+        if (ans) ans.style.maxHeight = ans.scrollHeight + "px";
+      })();
+
+      window.addEventListener("resize", ()=>{
+        const open = faqAccordion.querySelector(".faq-item.is-open .faq-a");
+        if (open) open.style.maxHeight = open.scrollHeight + "px";
+      });
+
+      /* =========================================================
+         MODAL MANAGER (универсально)
+         - открытие по data-open-modal="id"
+         - закрытие по data-close-modal
+         - ESC и клик по фону
+         ========================================================= */
+      let lastFocus = null;
+
+      function getModalByKey(key){
+        const map = {
+          login: document.getElementById("loginModal"),
+          panic: document.getElementById("panicModal"),
+          video: document.getElementById("videoModal"),
+          clinic: document.getElementById("clinicModal"),
+          relative: document.getElementById("relativeModal")
+        };
+        return map[key] || null;
+      }
+
+      function openModal(modal){
+        if (!modal) return;
+        lastFocus = document.activeElement;
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden","false");
+        document.body.style.overflow = "hidden";
+        setTimeout(()=>{
+          const firstInput = modal.querySelector("input, button");
+          firstInput?.focus();
+        }, 10);
+      }
+
+      function closeModal(modal){
+        if (!modal) return;
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden","true");
+        document.body.style.overflow = "";
+        if (lastFocus && typeof lastFocus.focus==="function") lastFocus.focus();
+      }
+
+      document.addEventListener("click",(e)=>{
+        const opener = e.target.closest("[data-open-modal]");
+        if (opener){
+          const key = opener.getAttribute("data-open-modal");
+          openModal(getModalByKey(key));
+          return;
+        }
+        const closer = e.target.closest("[data-close-modal]");
+        if (closer){
+          const modal = closer.closest(".modal");
+          closeModal(modal);
+          return;
+        }
+      });
+
+      document.querySelectorAll(".modal").forEach(modal=>{
+        modal.addEventListener("click",(e)=>{
+          if (e.target === modal) closeModal(modal);
+        });
+      });
+
+      document.addEventListener("keydown",(e)=>{
+        if (e.key !== "Escape") return;
+        const open = document.querySelector(".modal.is-open");
+        if (open) closeModal(open);
+      });
+
+      // Login open
+      openLoginBtn.addEventListener("click", ()=>openModal(getModalByKey("login")));
+
+      loginForm.addEventListener("submit",(e)=>{
+        e.preventDefault();
+        const phone = document.getElementById("loginPhone").value.trim();
+        const pass = document.getElementById("loginPass").value.trim();
+        if (!phone || !pass){
+          showToast("Заполните телефон и пароль.");
+          return;
+        }
+        showToast("Демо-вход выполнен.");
+        closeModal(getModalByKey("login"));
+      });
+      smsLoginBtn.addEventListener("click", ()=>showToast("Войти по SMS: демо-режим."));
+
+      /* =========================================================
+         КЛИНИКА: валидация ИНН/СНИЛС + отправка
+         ========================================================= */
+      const elClinicName = document.getElementById("clinicName");
+      const elInn = document.getElementById("inn");
+      const elSnils = document.getElementById("snils");
+      const elClinicPhone = document.getElementById("clinicPhone");
+      const elClinicEmail = document.getElementById("clinicEmail");
+
+      function digitsOnly(v){ return String(v||"").replace(/\D/g,""); }
+
+      function setErr(fieldId, errId, msg){
+        const f = document.getElementById(fieldId);
+        const e = document.getElementById(errId);
+        if (f) f.classList.toggle("is-error", !!msg);
+        if (e) e.textContent = msg || "";
+      }
+
+      function validEmail(v){
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      }
+
+      // INN input: keep digits, max 12
+      elInn.addEventListener("input", ()=>{
+        const d = digitsOnly(elInn.value).slice(0,12);
+        elInn.value = d;
+        if (d.length && d.length !== 10 && d.length !== 12){
+          setErr("fInn","eInn","ИНН должен содержать 10 или 12 цифр");
+        } else {
+          setErr("fInn","eInn","");
+        }
+      });
+
+      // SNILS input: allow formatting but validate 11 digits
+      elSnils.addEventListener("input", ()=>{
+        const d = digitsOnly(elSnils.value).slice(0,11);
+
+        // формат XXX-XXX-XXX XX (удобно пожилым)
+        let formatted = d;
+        if (d.length > 3) formatted = d.slice(0,3) + "-" + d.slice(3);
+        if (d.length > 6) formatted = formatted.slice(0,7) + "-" + d.slice(6);
+        if (d.length > 9) formatted = formatted.slice(0,11) + " " + d.slice(9);
+
+        elSnils.value = formatted;
+
+        if (d.length && d.length !== 11){
+          setErr("fSnils","eSnils","СНИЛС должен содержать 11 цифр");
+        } else {
+          setErr("fSnils","eSnils","");
+        }
+      });
+
+      // phone: soft sanitize
+      elClinicPhone.addEventListener("input", ()=>{
+        elClinicPhone.value = elClinicPhone.value.replace(/[^\d+\-()\s]/g,"");
+      });
+
+      function validateClinic(){
+        let ok = true;
+        const name = elClinicName.value.trim();
+        const inn = digitsOnly(elInn.value);
+        const snils = digitsOnly(elSnils.value);
+        const phone = elClinicPhone.value.trim();
+        const email = elClinicEmail.value.trim();
+
+        if (!name){ setErr("fClinicName","eClinicName","Заполните название клиники или ФИО врача"); ok=false; }
+        else setErr("fClinicName","eClinicName","");
+
+        if (!inn){ setErr("fInn","eInn","ИНН обязателен"); ok=false; }
+        else if (!(inn.length===10 || inn.length===12)){ setErr("fInn","eInn","ИНН должен содержать 10 или 12 цифр"); ok=false; }
+        else setErr("fInn","eInn","");
+
+        if (!snils){ setErr("fSnils","eSnils","СНИЛС обязателен"); ok=false; }
+        else if (snils.length !== 11){ setErr("fSnils","eSnils","СНИЛС должен содержать 11 цифр"); ok=false; }
+        else setErr("fSnils","eSnils","");
+
+        if (!phone){ setErr("fClinicPhone","eClinicPhone","Укажите контактный телефон"); ok=false; }
+        else setErr("fClinicPhone","eClinicPhone","");
+
+        if (!email){ setErr("fClinicEmail","eClinicEmail","Укажите email"); ok=false; }
+        else if (!validEmail(email)){ setErr("fClinicEmail","eClinicEmail","Введите корректный email"); ok=false; }
+        else setErr("fClinicEmail","eClinicEmail","");
+
+        return { ok, data: { clinicOrDoctor: name, inn, snils, phone, email } };
+      }
+
+      clinicForm.addEventListener("submit",(e)=>{
+        e.preventDefault();
+        const res = validateClinic();
+        if (!res.ok){
+          const firstBad = clinicForm.querySelector(".field.is-error input");
+          firstBad?.focus();
+          return;
+        }
+        console.log("Заявка клиники/врача:", res.data);
+        alert("Заявка отправлена! Наш менеджер свяжется с вами в ближайшее время");
+        clinicForm.reset();
+        closeModal(getModalByKey("clinic"));
+      });
+
+      /* =========================================================
+         Доверенное лицо
+         ========================================================= */
+      const relPhone = document.getElementById("relPhone");
+      relPhone.addEventListener("input", ()=>{ relPhone.value = relPhone.value.replace(/[^\d+\-()\s]/g,""); });
+
+      function setRelErr(msg){
+        const f = document.getElementById("fRelPhone");
+        const e = document.getElementById("eRelPhone");
+        f.classList.toggle("is-error", !!msg);
+        e.textContent = msg || "";
+      }
+
+      relativeForm.addEventListener("submit",(e)=>{
+        e.preventDefault();
+        const val = relPhone.value.trim();
+        const digits = digitsOnly(val);
+        if (!val || digits.length < 10){
+          setRelErr("Введите телефон родственника");
+          return;
+        }
+        setRelErr("");
+        console.log("Приглашение родственнику:", { phone: val });
+        showToast("Приглашение отправлено (демо-режим).");
+        closeModal(getModalByKey("relative"));
+        relativeForm.reset();
+      });
+
+      /* =========================================================
+         FAB + Chat + Video
+         ========================================================= */
+      function toggleFab(force){
+        const open = typeof force==="boolean" ? force : !fab.classList.contains("is-open");
+        fab.classList.toggle("is-open", open);
+      }
+      fabToggleBtn.addEventListener("click", ()=>toggleFab());
+
+      document.addEventListener("click", (e)=>{
+        if (!fab.contains(e.target)) toggleFab(false);
+      });
+
+      function openChat(){
+        chatPanel.classList.add("is-open");
+        // первое приветствие если чат пустой
+        if (!chatBody.dataset.inited){
+          chatBody.dataset.inited = "1";
+          addMsg("bot","Здравствуйте! Я помогу с вопросами. Напишите, например: «анализы», «запись», «плохо себя чувствую».🙂");
+          addMsg("bot","Если нужно срочно — нажмите «Срочная помощь».");
+        }
+        setTimeout(()=>chatInput.focus(), 50);
+      }
+      function closeChat(){ chatPanel.classList.remove("is-open"); }
+
+      closeChatBtn.addEventListener("click", closeChat);
+      fabChatBtn.addEventListener("click", ()=>{ toggleFab(false); openChat(); });
+      openChatFromHero.addEventListener("click", openChat);
+
+      fabVideoBtn.addEventListener("click", ()=>{ toggleFab(false); openModal(getModalByKey("video")); });
+      openVideoFromHero.addEventListener("click", ()=>openModal(getModalByKey("video")));
+
+      fabReminderBtn.addEventListener("click", ()=>{ toggleFab(false); showToast("Напоминания: демо. Можно подключить SMS/push."); });
+
+      /* =========================================================
+         Чат-бот по ключевым словам
+         ========================================================= */
+      const qa = [
+        { keys:["запис","консульт"], answer:"Чтобы записаться, нажмите «Записаться» в меню или напишите: «хочу консультацию». Мы предложим время (демо)." },
+        { keys:["анализ","кров","инвитро"], answer:"Сроки анализов смотрите в шаге «Анализы». Обычно утром натощак. Если есть сомнения — напишите фельдшеру." },
+        { keys:["плохо","самочув","боль","тревог"], answer:"Если вам плохо — нажмите «Срочная помощь» и позвоните фельдшеру. При сильном ухудшении вызывайте неотложную помощь." },
+        { keys:["лекар","таблет"], answer:"Ничего не отменяйте самостоятельно. Согласуйте лекарства с фельдшером и врачом — это важно перед операцией." },
+        { keys:["операц","госпитал"], answer:"В «День Х» следуйте времени приезда и подготовьте документы. Если нужна помощь — откройте чат." },
+        { keys:["родствен","довер"], answer:"Нажмите «Добавить родственника» — отправим приглашение (демо) и близкий сможет помогать." },
+        { keys:["видео","видеозвон"], answer:"В этом прототипе видеозвонок — демо. Нажмите «📹 Видеозвонок», чтобы открыть заглушку." }
+      ];
+
+      function addMsg(who, text){
+        const div = document.createElement("div");
+        div.className = "msg " + (who==="user" ? "user" : "bot");
+        div.textContent = text;
+        chatBody.appendChild(div);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }
+
+      function botReply(userText){
+        const t = userText.toLowerCase();
+        for (const item of qa){
+          if (item.keys.some(k => t.includes(k))){
+            return item.answer;
+          }
+        }
+        return "Соединяю с фельдшером... (демо-режим). Пока вы ждёте, можно нажать «Срочная помощь» для звонка.";
+      }
+
+      function sendChat(){
+        const text = (chatInput.value || "").trim();
+        if (!text) return;
+        addMsg("user", text);
+        chatInput.value = "";
+        setTimeout(()=>addMsg("bot", botReply(text)), 450);
+      }
+
+      sendChatBtn.addEventListener("click", sendChat);
+      chatInput.addEventListener("keydown",(e)=>{
+        if (e.key === "Enter") sendChat();
+      });
+
+      /* =========================================================
+         РЕЖИМЫ: a11y + simple
+         ========================================================= */
+      toggleA11yBtn.addEventListener("click", ()=>{
+        const on = !document.body.classList.contains("a11y-mode");
+        document.body.classList.toggle("a11y-mode", on);
+        toggleA11yBtn.setAttribute("aria-pressed", String(on));
+        localStorage.setItem(LS.a11y, on ? "1" : "0");
+        showToast(on ? "Режим «Крупнее» включён." : "Режим «Крупнее» выключен.");
+      });
+
+      toggleSimpleBtn.addEventListener("click", ()=>{
+        const on = !document.body.classList.contains("simple-mode");
+        document.body.classList.toggle("simple-mode", on);
+        toggleSimpleBtn.setAttribute("aria-pressed", String(on));
+        localStorage.setItem(LS.simple, on ? "1" : "0");
+
+        if (on){
+          showToast("Упрощённый режим включён.");
+          // Сразу прокрутка к карте подготовки
+          document.getElementById("prep-map")?.scrollIntoView({behavior:"smooth", block:"start"});
+        } else {
+          showToast("Упрощённый режим выключен.");
+        }
+      });
+
+      /* =========================================================
+         Голосовой помощник (озвучивание) — SpeechSynthesis
+         ========================================================= */
+      let activeUtter = null;
+
+      function speakText(text){
+        if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined"){
+          showToast("Ваш браузер не поддерживает озвучивание");
+          return;
+        }
+        // остановить предыдущую озвучку
+        window.speechSynthesis.cancel();
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "ru-RU";
+        u.rate = 1.0;
+        u.pitch = 1.0;
+        activeUtter = u;
+        window.speechSynthesis.speak(u);
+      }
+
+      document.addEventListener("click",(e)=>{
+        const btn = e.target.closest("[data-speak]");
+        if (!btn) return;
+        const sel = btn.getAttribute("data-speak");
+        const el = document.querySelector(sel);
+        const text = el ? el.innerText.replace(/\s+/g," ").trim() : "";
+        if (!text){
+          showToast("Нечего озвучивать");
+          return;
+        }
+        speakText(text);
+      });
+
+      /* =========================================================
+         Голосовой ввод в поиске — SpeechRecognition
+         ========================================================= */
+      function startVoiceInput(){
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR){
+          showToast("Ваш браузер не поддерживает голосовой ввод");
+          return;
+        }
+        const rec = new SR();
+        rec.lang = "ru-RU";
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+
+        showToast("Слушаю… говорите.");
+        rec.onresult = (event)=>{
+          const text = event.results?.[0]?.[0]?.transcript || "";
+          if (text){
+            searchInput.value = text;
+            showToast("Готово: текст вставлен в поиск.");
+          }
+        };
+        rec.onerror = ()=> showToast("Не удалось распознать речь.");
+        rec.start();
+      }
+
+      voiceInputBtn.addEventListener("click", startVoiceInput);
+
+      /* Поиск (демо) */
+      searchBtn.addEventListener("click", ()=>{
+        const q = (searchInput.value||"").trim();
+        if (!q) { showToast("Введите запрос или используйте 🎤"); return; }
+        showToast(`Поиск (демо): «${q}»`);
+      });
+
+      /* =========================================================
+         Видеозвонок/чат из "Спросить фельдшера"
+         ========================================================= */
+      askBtn.addEventListener("dblclick", ()=>{ // двойной клик как "быстро открыть чат"
+        openChat();
+      });
+
+      /* =========================================================
+         Инициализация
+         ========================================================= */
+      yearEl.textContent = new Date().getFullYear();
+      loadState();
+      renderAll();
+
+      /* =========================================================
+         Кнопки hero "видео/чат" уже привязаны.
+         Дополнительно: закрыть меню при клике на nav-ссылку
+         ========================================================= */
+      mainNav?.addEventListener("click",(e)=>{
+        const link = e.target.closest("a");
+        if (!link) return;
+        if (window.innerWidth <= 860 && mainNav.classList.contains("is-open")){
+          setTimeout(()=>toggleBurger(false), 60);
+        }
+      });
+
+    })();
 </script>
+
 </body>
 </html>
