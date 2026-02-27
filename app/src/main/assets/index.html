@@ -1491,7 +1491,8 @@
     display: none !important;
   }
 
-  #openLoginBtn{
+  #openLoginBtn,
+  #openRegisterBtn{
     display: none !important;
   }
 
@@ -1700,6 +1701,9 @@
 
                 <button class="icon-btn" type="button" id="openLoginBtn" aria-label="Войти">
                     <i class="fa-solid fa-user"></i>
+                </button>
+                <button class="icon-btn" type="button" id="openRegisterBtn" aria-label="Регистрация">
+                    <i class="fa-solid fa-user-plus"></i>
                 </button>
 
                 <!-- Режим крупного текста (условная "версия для слабовидящих") -->
@@ -2300,7 +2304,7 @@
         <div class="modal__head">
             <div>
                 <h3 class="modal__title" id="loginTitle">Вход</h3>
-                <p class="modal__sub">Демо-форма. Для входа введите телефон и пароль.</p>
+                <p class="modal__sub">Введите телефон и пароль. Если аккаунта нет — зарегистрируйтесь.</p>
             </div>
             <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
                 <i class="fa-solid fa-xmark"></i>
@@ -2659,6 +2663,7 @@
 
       // Modals
       const openLoginBtn = document.getElementById("openLoginBtn");
+      const openRegisterBtn = document.getElementById("openRegisterBtn");
       const loginForm = document.getElementById("loginForm");
       const smsLoginBtn = document.getElementById("smsLoginBtn");
       const registerForm = document.getElementById("registerForm");
@@ -3097,8 +3102,9 @@
         if (open) closeModal(open);
       });
 
-      // Login open
-      openLoginBtn.addEventListener("click", ()=>openModal(getModalByKey("login")));
+      // Login / Register open
+      openLoginBtn?.addEventListener("click", ()=>openModal(getModalByKey("login")));
+      openRegisterBtn?.addEventListener("click", ()=>openModal(getModalByKey("register")));
 
       loginForm.addEventListener("submit",(e)=>{
         e.preventDefault();
@@ -3497,100 +3503,6 @@
       });
 
     })();
-// ===== Срочная помощь: открыть модалку =====
-const panicBtn = document.getElementById("panicBtn");
-const panicModal = document.getElementById("panicModal");
-
-let lastFocus = null;
-
-function openModal(modal){
-  if (!modal) return;
-  lastFocus = document.activeElement;
-  modal.classList.add("is-open");
-  modal.setAttribute("aria-hidden","false");
-  document.body.style.overflow = "hidden";
-  setTimeout(()=> modal.querySelector("a,button,input")?.focus(), 10);
-}
-
-function closeModal(modal){
-  if (!modal) return;
-  modal.classList.remove("is-open");
-  modal.setAttribute("aria-hidden","true");
-  document.body.style.overflow = "";
-  lastFocus?.focus?.();
-}
-
-panicBtn?.addEventListener("click", ()=> openModal(panicModal));
-
-// закрытие по кнопкам data-close-modal
-document.addEventListener("click",(e)=>{
-  const closer = e.target.closest("[data-close-modal]");
-  if (closer){
-    const modal = closer.closest(".modal");
-    closeModal(modal);
-  }
-});
-
-// закрытие по клику на фон
-panicModal?.addEventListener("click",(e)=>{
-  if (e.target === panicModal) closeModal(panicModal);
-});
-
-// закрытие по ESC
-document.addEventListener("keydown",(e)=>{
-  if (e.key === "Escape" && panicModal?.classList.contains("is-open")){
-    closeModal(panicModal);
-  }
-const panicBtn = document.getElementById("panicBtn");
-
-panicBtn?.addEventListener("click", () => {
-  const phone = "+78001234567";
-
-  // если открыто в Android WebView — вызываем мост
-  if (window.AndroidBridge && typeof window.AndroidBridge.dial === "function") {
-    window.AndroidBridge.dial(phone);
-    return;
-  }
-
-  // запасной вариант для обычного браузера
-  window.location.href = "tel:" + phone;
-});});
 </script>
-<button class="panic-fixed" type="button" id="panicBtn" aria-label="Срочная помощь">
-     Срочная помощь
-</button>
-<div class="modal" id="panicModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="panicTitle">
-    <div class="modal__dialog">
-        <div class="modal__head">
-            <div>
-                <h3 class="modal__title" id="panicTitle"> Срочная помощь</h3>
-                <p class="modal__sub">Если вам плохо, немедленно позвоните фельдшеру.</p>
-            </div>
-            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-
-        <div class="modal__body">
-            <div class="card" style="padding:16px;border-radius:24px;border:1px solid var(--line);box-shadow:var(--shadow-sm);">
-                <div style="font-size:1.6rem;font-weight:900; letter-spacing:-.02em;">
-                    +7 800 123-45-67
-                </div>
-
-                <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-                    <a class="btn btn-teal" href="tel:+78001234567" style="text-decoration:none;">
-                        <i class="fa-solid fa-phone"></i> Позвонить сейчас
-                    </a>
-
-                    <button class="btn btn-ghost" type="button" data-close-modal>Закрыть</button>
-                </div>
-
-                <p style="margin:12px 0 0; color:var(--muted); font-weight:900;">
-                    Если состояние резко ухудшается — обратитесь за неотложной медицинской помощью.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>
