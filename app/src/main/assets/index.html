@@ -1904,7 +1904,10 @@
 
                         <div class="side-footer">
                             <span id="checkCount">0/0 отмечено</span>
-                            <button class="tiny-link" type="button" id="resetChecklistBtn">Сбросить</button>
+                            <div style="display:flex; gap:10px;">
+                                <button class="tiny-link" type="button" id="resetChecklistBtn">Сброс чек-листа</button>
+                                <button class="tiny-link" type="button" id="resetPrepBtn">Сбросить путь</button>
+                            </div>
                         </div>
                     </aside>
                 </div>
@@ -2223,6 +2226,52 @@
             </div>
         </div>
     </section>
+
+    <section class="section" id="medical-logic" style="padding-top:0;">
+        <div class="container">
+            <div class="card" style="padding:18px;border-radius:24px;display:grid;gap:16px;">
+                <div class="section-head" style="margin-bottom:0;">
+                    <div>
+                        <h2 class="section-title" style="font-size:1.6rem;">Медицинская логика и безопасность</h2>
+                        <p class="section-lead">Добавили клинический чек-лист и демо-калькулятор ИОЛ, чтобы врачу и пациенту проще сверять готовность.</p>
+                    </div>
+                </div>
+                <div class="checklist" id="safetyChecklist" style="display:grid;gap:10px;"></div>
+                <div class="side-footer" style="justify-content:flex-start; gap:12px;">
+                    <span id="safetyCount">0/0 отмечено</span>
+                    <button class="tiny-link" type="button" id="resetSafetyChecklistBtn">Сбросить мед. чек-лист</button>
+                </div>
+                <div class="card" style="padding:14px;border-radius:18px;">
+                    <h3 style="margin:0 0 8px;">Калькулятор ИОЛ (демо-оценка)</h3>
+                    <p class="note" style="margin-top:0;">Предварительная оценка мощности линзы. Финальное решение принимает офтальмохирург.</p>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+                        <div class="field"><label for="iolAL">AL (мм)</label><input id="iolAL" type="number" step="0.01" placeholder="23.50" /></div>
+                        <div class="field"><label for="iolK">K средняя (D)</label><input id="iolK" type="number" step="0.01" placeholder="43.25" /></div>
+                        <div class="field"><label for="iolAconst">A-constant</label><input id="iolAconst" type="number" step="0.01" placeholder="118.4" /></div>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+                        <button class="btn btn-teal" type="button" id="calcIolBtn">Рассчитать ИОЛ</button>
+                        <strong id="iolResult">Результат: —</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="workflow" style="padding-top:0;">
+        <div class="container">
+            <div class="card" style="padding:18px;border-radius:24px;display:grid;gap:12px;">
+                <h2 class="section-title" style="font-size:1.6rem;">Меньше бумажной волокиты и работа при плохой связи</h2>
+                <p class="section-lead">Формы для клиники и родственника теперь сохраняются в очередь, если нет интернета. После восстановления связи они дозагружаются автоматически.</p>
+                <div class="card" style="padding:12px;border-radius:16px;">
+                    <div style="font-weight:900;">Статус связи: <span id="networkBadge">Проверка...</span></div>
+                    <div style="margin-top:6px;">Отложенные отправки: <strong id="syncQueueCount">0</strong></div>
+                    <button class="btn btn-soft" id="syncNowBtn" type="button" style="margin-top:10px;">Дозагрузить данные сейчас</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </main>
 
 <!-- =========================================================
@@ -2257,9 +2306,9 @@
 <!-- =========================================================
      ПАНИКА: фиксированная кнопка + модалка
      ========================================================= -->
-<a class="panic-fixed" href="tel:+78001234567" aria-label="Срочная помощь">
+<button class="panic-fixed" type="button" id="panicBtn" aria-label="Срочная помощь">
      Срочная помощь
-</a>
+</button>
 
 <!-- =========================================================
      FAB: быстрые действия (звонок / чат / напоминания / видеозвонок)
@@ -2541,7 +2590,9 @@
         mood: "of_mood_v1",
         a11y: "of_a11y_v1",
         simple: "of_simple_v1",
-        users: "of_users_v1"
+        users: "of_users_v1",
+        safety: "of_safety_v1",
+        queue: "of_sync_queue_v1"
       };
 
       /* ------------------------------
@@ -2634,8 +2685,19 @@
       const checklistEl = document.getElementById("checklist");
       const checkCountEl = document.getElementById("checkCount");
       const resetChecklistBtn = document.getElementById("resetChecklistBtn");
+      const resetPrepBtn = document.getElementById("resetPrepBtn");
 
       const downloadMemoBtn = document.getElementById("downloadMemoBtn");
+      const panicBtn = document.getElementById("panicBtn");
+
+      const safetyChecklistEl = document.getElementById("safetyChecklist");
+      const safetyCountEl = document.getElementById("safetyCount");
+      const resetSafetyChecklistBtn = document.getElementById("resetSafetyChecklistBtn");
+      const calcIolBtn = document.getElementById("calcIolBtn");
+      const iolResult = document.getElementById("iolResult");
+      const networkBadge = document.getElementById("networkBadge");
+      const syncQueueCount = document.getElementById("syncQueueCount");
+      const syncNowBtn = document.getElementById("syncNowBtn");
 
       // Mood
       const moodMsg = document.getElementById("moodMsg");
@@ -2676,6 +2738,15 @@
          ------------------------------ */
       let prepState = { completedCount: 1, previewIndex: 1 }; // приятный старт
       let checklistState = {}; // { stepId: [true/false...] }
+      const safetyItems = [
+        "Подтверждены аллергии и реакция на препараты",
+        "Проверены антикоагулянты и схема отмены/продолжения",
+        "Пациенту объяснён режим питания перед операцией",
+        "Сверены результаты анализов и дата их актуальности",
+        "Подписано информированное согласие"
+      ];
+      let safetyState = safetyItems.map(()=>false);
+      let pendingQueue = [];
 
       function safeParse(v, fallback){
         try{ return JSON.parse(v) ?? fallback; }catch{ return fallback; }
@@ -2698,17 +2769,30 @@
           moodButtons.forEach(b => b.classList.toggle("is-selected", b.dataset.mood===savedMood));
         }
 
-        const a11yOn = localStorage.getItem(LS.a11y)==="1";
-        document.body.classList.toggle("a11y-mode", a11yOn);
-        toggleA11yBtn.setAttribute("aria-pressed", String(a11yOn));
+        const savedSafety = safeParse(localStorage.getItem(LS.safety), null);
+        if (Array.isArray(savedSafety) && savedSafety.length===safetyItems.length){
+          safetyState = savedSafety.map(Boolean);
+        }
 
-        const simpleOn = localStorage.getItem(LS.simple)==="1";
+        const savedQueue = safeParse(localStorage.getItem(LS.queue), null);
+        if (Array.isArray(savedQueue)) pendingQueue = savedQueue;
+
+        const a11yLS = localStorage.getItem(LS.a11y);
+        const simpleLS = localStorage.getItem(LS.simple);
+        const a11yOn = a11yLS===null ? true : a11yLS==="1";
+        const simpleOn = simpleLS===null ? true : simpleLS==="1";
+        document.body.classList.toggle("a11y-mode", a11yOn);
         document.body.classList.toggle("simple-mode", simpleOn);
+        toggleA11yBtn.setAttribute("aria-pressed", String(a11yOn));
         toggleSimpleBtn.setAttribute("aria-pressed", String(simpleOn));
+        if (a11yLS===null) localStorage.setItem(LS.a11y, "1");
+        if (simpleLS===null) localStorage.setItem(LS.simple, "1");
       }
 
       function savePrep(){ localStorage.setItem(LS.prep, JSON.stringify(prepState)); }
       function saveChecklist(){ localStorage.setItem(LS.checklist, JSON.stringify(checklistState)); }
+      function saveSafety(){ localStorage.setItem(LS.safety, JSON.stringify(safetyState)); }
+      function saveQueue(){ localStorage.setItem(LS.queue, JSON.stringify(pendingQueue)); }
 
       /* ------------------------------
          TOAST
@@ -2896,7 +2980,18 @@
         checklistState[step.id] = step.checklist.map(()=>false);
         saveChecklist();
         renderChecklist(step);
-        showToast("Чек-лист сброшен.");
+        showToast("Чек-лист шага сброшен.");
+      });
+
+      resetPrepBtn?.addEventListener("click", ()=>{
+        prepState = { completedCount: 0, previewIndex: 0 };
+        checklistState = {};
+        localStorage.removeItem(LS.mood);
+        moodButtons.forEach((b)=>b.classList.remove("is-selected"));
+        savePrep();
+        saveChecklist();
+        renderAll();
+        showToast("Путь к операции сброшен. Начинаем с первого шага.");
       });
 
       completeStepBtn.addEventListener("click", ()=>{
@@ -2920,10 +3015,108 @@
         showToast("Открываем помощь: можно позвонить или написать в чат.");
       });
 
+
+      function renderSafetyChecklist(){
+        if (!safetyChecklistEl) return;
+        safetyChecklistEl.innerHTML = "";
+        let done = 0;
+        safetyItems.forEach((text, i)=>{
+          const checked = !!safetyState[i];
+          if (checked) done += 1;
+          const row = document.createElement("div");
+          row.className = "check-item" + (checked ? " is-checked" : "");
+          row.innerHTML = `<input type="checkbox" id="safe_${i}" data-i="${i}" ${checked?"checked":""} /><label for="safe_${i}">${text}</label>`;
+          safetyChecklistEl.appendChild(row);
+        });
+        safetyCountEl.textContent = `${done}/${safetyItems.length} отмечено`;
+      }
+
+      safetyChecklistEl?.addEventListener("change", (e)=>{
+        const input = e.target.closest('input[type="checkbox"]');
+        if (!input) return;
+        const i = Number(input.dataset.i);
+        safetyState[i] = input.checked;
+        saveSafety();
+        renderSafetyChecklist();
+      });
+
+      resetSafetyChecklistBtn?.addEventListener("click", ()=>{
+        safetyState = safetyItems.map(()=>false);
+        saveSafety();
+        renderSafetyChecklist();
+        showToast("Медицинский чек-лист сброшен.");
+      });
+
+      calcIolBtn?.addEventListener("click", ()=>{
+        const al = Number(document.getElementById("iolAL").value);
+        const k = Number(document.getElementById("iolK").value);
+        const aconst = Number(document.getElementById("iolAconst").value);
+        if (!al || !k || !aconst){
+          showToast("Заполните AL, K и A-constant.");
+          return;
+        }
+        const power = (aconst - 2.5 * al - 0.9 * k);
+        const rounded = Math.round(power * 2) / 2;
+        iolResult.textContent = `Результат: ${rounded.toFixed(1)} D (демо)`;
+      });
+
+      function dialEmergency(){
+        const phone = "+78001234567";
+        if (window.AndroidBridge && typeof window.AndroidBridge.dial === "function"){
+          window.AndroidBridge.dial(phone);
+        } else {
+          window.location.href = "tel:" + phone;
+        }
+      }
+      panicBtn?.addEventListener("click", dialEmergency);
+
+      function renderSyncStatus(){
+        const online = navigator.onLine;
+        networkBadge.textContent = online ? "онлайн" : "оффлайн";
+        networkBadge.style.color = online ? "#2AA9A3" : "#d9534f";
+        syncQueueCount.textContent = String(pendingQueue.length);
+      }
+
+      function queueOrSend(type, payload){
+        if (!navigator.onLine){
+          pendingQueue.push({ type, payload, ts: Date.now() });
+          saveQueue();
+          renderSyncStatus();
+          showToast("Нет сети. Данные сохранены и будут дозагружены позже.");
+          return false;
+        }
+        console.log("Отправлено:", type, payload);
+        return true;
+      }
+
+      function flushQueue(){
+        if (!navigator.onLine){
+          renderSyncStatus();
+          return;
+        }
+        if (!pendingQueue.length){
+          renderSyncStatus();
+          showToast("Очередь пуста.");
+          return;
+        }
+        pendingQueue.forEach((item)=>console.log("Дозагрузка:", item.type, item.payload));
+        pendingQueue = [];
+        saveQueue();
+        renderSyncStatus();
+        showToast("Данные дозагружены.");
+      }
+
+      syncNowBtn?.addEventListener("click", flushQueue);
+      window.addEventListener("online", flushQueue);
+      window.addEventListener("online", renderSyncStatus);
+      window.addEventListener("offline", renderSyncStatus);
+
       function renderAll(){
         renderProgress();
         renderTimeline();
         renderDetail();
+        renderSafetyChecklist();
+        renderSyncStatus();
       }
 
       /* =========================================================
@@ -3269,8 +3462,10 @@
           firstBad?.focus();
           return;
         }
-        console.log("Заявка клиники/врача:", res.data);
-        alert("Заявка отправлена! Наш менеджер свяжется с вами в ближайшее время");
+        const sent = queueOrSend("clinic", res.data);
+        if (sent){
+          showToast("Заявка отправлена. Менеджер свяжется с вами.");
+        }
         clinicForm.reset();
         closeModal(getModalByKey("clinic"));
       });
@@ -3297,8 +3492,10 @@
           return;
         }
         setRelErr("");
-        console.log("Приглашение родственнику:", { phone: val });
-        showToast("Приглашение отправлено (демо-режим).");
+        const sent = queueOrSend("relative", { phone: val });
+        if (sent){
+          showToast("Приглашение отправлено.");
+        }
         closeModal(getModalByKey("relative"));
         relativeForm.reset();
       });
