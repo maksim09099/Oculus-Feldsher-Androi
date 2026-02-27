@@ -1076,6 +1076,13 @@
           white-space:nowrap;
         }
         .fab-menu i{ color:var(--teal-2); }
+
+        body.chat-open .fab{
+          opacity:0;
+          pointer-events:none;
+          transform: translateY(8px);
+          transition: opacity .2s ease, transform .2s ease;
+        }
         .fab-main{
           width:62px;height:62px;border-radius:999px;
           border:0;
@@ -3495,7 +3502,9 @@
       });
 
       function openChat(){
+        toggleFab(false);
         chatPanel.classList.add("is-open");
+        document.body.classList.add("chat-open");
         // первое приветствие если чат пустой
         if (!chatBody.dataset.inited){
           chatBody.dataset.inited = "1";
@@ -3504,7 +3513,10 @@
         }
         setTimeout(()=>chatInput.focus(), 50);
       }
-      function closeChat(){ chatPanel.classList.remove("is-open"); }
+      function closeChat(){
+        chatPanel.classList.remove("is-open");
+        document.body.classList.remove("chat-open");
+      }
 
       closeChatBtn.addEventListener("click", closeChat);
       fabChatBtn.addEventListener("click", ()=>{ toggleFab(false); openChat(); });
