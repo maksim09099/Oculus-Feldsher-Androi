@@ -2530,7 +2530,12 @@
                     <button class="btn btn-soft" type="button" id="tgDetectChatBtn">🔎 Найти chat_id из getUpdates</button>
                     <button class="btn btn-teal" type="button" id="tgTestBtn">📩 Отправить тест</button>
                     <button class="btn btn-ghost" type="button" id="tgSaveConfigBtn">💾 Сохранить подключение</button>
+                    <a class="btn btn-soft" href="https://t.me/oculusmdbot" target="_blank" rel="noopener">🤖 Открыть @oculusmdbot</a>
                 </div>
+                <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:800;">
+                    <input id="tgChatBridgeEnabled" type="checkbox" />
+                    Использовать Telegram как основной чат (сообщения из приложения пересылать в Telegram)
+                </label>
                 <p class="note" style="margin-top:10px;">Шаги: 1) Напишите боту <b>/start</b> в Telegram. 2) Нажмите «Найти chat_id». 3) Включите напоминания.</p>
             </div>
 
@@ -2631,7 +2636,8 @@
         aiConfig: "of_ai_config_v1",
         webNotify: "of_web_notify_v1",
         tgConfig: "of_tg_config_v1",
-        tgReminders: "of_tg_reminders_v1"
+        tgReminders: "of_tg_reminders_v1",
+        tgChatBridge: "of_tg_chat_bridge_v1"
       };
 
       /* ------------------------------
@@ -2782,6 +2788,7 @@
       const tgReminderAt = document.getElementById("tgReminderAt");
       const tgReminderRepeat = document.getElementById("tgReminderRepeat");
       const tgReminderList = document.getElementById("tgReminderList");
+      const tgChatBridgeEnabled = document.getElementById("tgChatBridgeEnabled");
 
       // AI Chat config
       const aiApiKey = document.getElementById("aiApiKey");
@@ -2810,6 +2817,7 @@
       };
       let tgReminders = [];
       let tgReminderTimer = null;
+      let tgChatBridge = false;
 
       function safeParse(v, fallback){
         try{ return JSON.parse(v) ?? fallback; }catch{ return fallback; }
@@ -2869,6 +2877,8 @@
 
         if (tgBotToken) tgBotToken.value = tgConfig.token || "";
         if (tgChatId) tgChatId.value = tgConfig.chatId || "";
+        tgChatBridge = localStorage.getItem(LS.tgChatBridge) === "1";
+        if (tgChatBridgeEnabled) tgChatBridgeEnabled.checked = tgChatBridge;
         renderTelegramReminders();
       }
 
@@ -2880,6 +2890,7 @@
       function saveWebNotify(){ localStorage.setItem(LS.webNotify, webNotifyEnabled ? "1" : "0"); }
       function saveTelegramConfig(){ localStorage.setItem(LS.tgConfig, JSON.stringify(tgConfig)); }
       function saveTelegramReminders(){ localStorage.setItem(LS.tgReminders, JSON.stringify(tgReminders)); }
+      function saveTgChatBridge(){ localStorage.setItem(LS.tgChatBridge, tgChatBridge ? "1" : "0"); }
 
       /* ------------------------------
          TOAST
@@ -3619,6 +3630,15 @@
         chatInput.value = "";
 
         try {
+          if (tgChatBridge) {
+            await sendTelegramMessage(`💬 Сообщение из приложения Oculus MD:
+${text}`);
+            const answer = "✅ Сообщение отправлено в Telegram-бота. Дальше общайтесь в @oculusmdbot — ответы и напоминания придут туда.";
+            addMsg("bot", answer);
+            notifyUser("Oculus MD чат", answer);
+            return;
+          }
+
           let answer = null;
           if (aiConfig.apiKey) {
             addMsg("bot", "⏳ Думаю...");
@@ -3630,7 +3650,7 @@
           addMsg("bot", answer);
           notifyUser("Oculus MD чат", answer.slice(0, 120));
         } catch (e) {
-          addMsg("bot", "⚠️ Ошибка GPT API. Переключаюсь на локальный режим.");
+          addMsg("bot", "⚠️ Ошибка отправки. Проверьте Telegram/OpenAI настройки.");
           addMsg("bot", botReply(text));
           showToast(`❌ ${e.message}`);
         }
@@ -3700,12 +3720,16 @@
           }).join("");
       }
 
-      async function sendTelegramReminder(reminder){
+      async function sendTelegramMessage(text){
         const chatId = (tgChatId?.value || tgConfig.chatId || "").trim();
         if (!chatId) throw new Error("Укажите chat_id пациента");
+        return telegramApi("sendMessage", { chat_id: chatId, text });
+      }
+
+      async function sendTelegramReminder(reminder){
         const text = `👁️ Oculus MD
 ${reminder.text}`;
-        await telegramApi("sendMessage", { chat_id: chatId, text });
+        await sendTelegramMessage(text);
       }
 
       function startTelegramReminderWorker(){
@@ -3737,7 +3761,9 @@ ${reminder.text}`;
       tgSaveConfigBtn?.addEventListener("click", ()=>{
         tgConfig.token = (tgBotToken.value || "").trim();
         tgConfig.chatId = (tgChatId.value || "").trim();
+        tgChatBridge = !!tgChatBridgeEnabled?.checked;
         saveTelegramConfig();
+        saveTgChatBridge();
         showToast("✅ Telegram подключение сохранено");
       });
 
@@ -3766,10 +3792,7 @@ ${reminder.text}`;
           tgConfig.token = (tgBotToken.value || "").trim();
           tgConfig.chatId = (tgChatId.value || "").trim();
           saveTelegramConfig();
-          await telegramApi("sendMessage", {
-            chat_id: tgConfig.chatId,
-            text: "✅ Oculus MD: тестовое сообщение. Telegram-напоминания подключены."
-          });
+          await sendTelegramMessage("✅ Oculus MD: тестовое сообщение. Telegram-напоминания подключены.");
           showToast("📩 Тест отправлен в Telegram");
         } catch (e) {
           showToast(`❌ ${e.message}`);
