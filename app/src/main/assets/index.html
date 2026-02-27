@@ -2299,14 +2299,37 @@
     <div class="modal__dialog">
         <div class="modal__head">
             <div>
-                <h3 class="modal__title" id="loginTitle">Вход</h3>
-                <p class="modal__sub">Демо-форма. Для входа введите телефон и пароль.</p>
+                <h3 class="modal__title" id="loginTitle">👤 Регистрация / вход</h3>
+                <p class="modal__sub" id="loginSub">Сначала зарегистрируйтесь по телефону, затем входите в свою учетную запись.</p>
             </div>
             <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
         <div class="modal__body">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                <button class="btn btn-soft" type="button" id="showRegisterBtn">📝 Регистрация</button>
+                <button class="btn btn-ghost" type="button" id="showLoginBtn">🔐 Вход</button>
+            </div>
+
+            <form id="registerForm" style="display:grid; gap:12px;" novalidate>
+                <div class="field">
+                    <label for="regName">ФИО</label>
+                    <input id="regName" type="text" placeholder="Иванов Иван Иванович" required />
+                </div>
+                <div class="field">
+                    <label for="regPhone">Телефон</label>
+                    <input id="regPhone" type="tel" placeholder="+7 (___) ___-__-__" required />
+                </div>
+                <div class="field">
+                    <label for="regPass">Пароль</label>
+                    <input id="regPass" type="password" placeholder="Минимум 4 символа" required />
+                </div>
+                <button class="btn btn-teal" type="submit">
+                    <i class="fa-solid fa-user-plus"></i> Создать учетную запись
+                </button>
+            </form>
+
             <form id="loginForm" style="display:grid; gap:12px;" novalidate>
                 <div class="field">
                     <label for="loginPhone">Телефон</label>
@@ -2555,6 +2578,8 @@
         mood: "of_mood_v1",
         a11y: "of_a11y_v1",
         simple: "of_simple_v1",
+        account: "of_account_v1",
+        session: "of_session_v1",
         tgConfig: "of_tg_config_v1",
         tgReminders: "of_tg_reminders_v1"
       };
@@ -2678,6 +2703,14 @@
 
       // Modals
       const openLoginBtn = document.getElementById("openLoginBtn");
+      const loginModal = document.getElementById("loginModal");
+      const loginSub = document.getElementById("loginSub");
+      const showRegisterBtn = document.getElementById("showRegisterBtn");
+      const showLoginBtn = document.getElementById("showLoginBtn");
+      const registerForm = document.getElementById("registerForm");
+      const regName = document.getElementById("regName");
+      const regPhone = document.getElementById("regPhone");
+      const regPass = document.getElementById("regPass");
       const loginForm = document.getElementById("loginForm");
       const smsLoginBtn = document.getElementById("smsLoginBtn");
 
@@ -2701,6 +2734,8 @@
          ------------------------------ */
       let prepState = { completedCount: 1, previewIndex: 1 }; // приятный старт
       let checklistState = {}; // { stepId: [true/false...] }
+      let accountState = null;
+      let sessionState = { loggedIn: false, phone: "" };
       let tgConfig = {
         token: "8065093499:AAGekp349z5hUCGuUWUDQeCzz_ZgvOLHv2U",
         chatId: "",
@@ -2738,6 +2773,12 @@
         document.body.classList.toggle("simple-mode", simpleOn);
         toggleSimpleBtn.setAttribute("aria-pressed", String(simpleOn));
 
+        accountState = safeParse(localStorage.getItem(LS.account), null);
+        const savedSession = safeParse(localStorage.getItem(LS.session), null);
+        if (savedSession && typeof savedSession === "object") {
+          sessionState = { ...sessionState, ...savedSession };
+        }
+
         const savedTgConfig = safeParse(localStorage.getItem(LS.tgConfig), null);
         if (savedTgConfig && typeof savedTgConfig === "object") {
           tgConfig = { ...tgConfig, ...savedTgConfig };
@@ -2755,6 +2796,8 @@
 
       function savePrep(){ localStorage.setItem(LS.prep, JSON.stringify(prepState)); }
       function saveChecklist(){ localStorage.setItem(LS.checklist, JSON.stringify(checklistState)); }
+      function saveAccount(){ localStorage.setItem(LS.account, JSON.stringify(accountState)); }
+      function saveSession(){ localStorage.setItem(LS.session, JSON.stringify(sessionState)); }
       function saveTelegramConfig(){ localStorage.setItem(LS.tgConfig, JSON.stringify(tgConfig)); }
       function saveTelegramReminders(){ localStorage.setItem(LS.tgReminders, JSON.stringify(tgReminders)); }
 
@@ -2767,6 +2810,49 @@
         toast.classList.add("show");
         clearTimeout(showToast._t);
         showToast._t = setTimeout(()=>toast.classList.remove("show"), 2200);
+      }
+
+      function normalizePhone(v){
+        const d = String(v || "").replace(/\D/g, "");
+        if (!d) return "";
+        if (d.length === 11 && d.startsWith("8")) return "+7" + d.slice(1);
+        if (d.length === 11 && d.startsWith("7")) return "+" + d;
+        if (d.length === 10) return "+7" + d;
+        return v.trim();
+      }
+
+      function isAuthRequired(){
+        return !sessionState.loggedIn;
+      }
+
+      function renderAuthMode(mode){
+        const isRegister = mode === "register";
+        registerForm.style.display = isRegister ? "grid" : "none";
+        loginForm.style.display = isRegister ? "none" : "grid";
+        showRegisterBtn.classList.toggle("btn-teal", isRegister);
+        showRegisterBtn.classList.toggle("btn-soft", !isRegister);
+        showLoginBtn.classList.toggle("btn-teal", !isRegister);
+        showLoginBtn.classList.toggle("btn-ghost", isRegister);
+
+        if (loginSub){
+          loginSub.textContent = isRegister
+            ? "Создайте учетную запись по телефону, затем входите в приложение."
+            : "Введите телефон и пароль от вашей учетной записи.";
+        }
+      }
+
+      function updateHeaderAuthState(){
+        const icon = openLoginBtn?.querySelector("i");
+        if (!icon) return;
+        icon.className = sessionState.loggedIn ? "fa-solid fa-user-check" : "fa-solid fa-user";
+        openLoginBtn.setAttribute("aria-label", sessionState.loggedIn ? "Профиль" : "Войти");
+      }
+
+      function enforceAuthGate(){
+        updateHeaderAuthState();
+        if (sessionState.loggedIn) return;
+        openModal(getModalByKey("login"));
+        renderAuthMode(accountState ? "login" : "register");
       }
 
       /* ------------------------------
@@ -3104,6 +3190,10 @@
 
       function closeModal(modal){
         if (!modal) return;
+        if (modal.id === "loginModal" && isAuthRequired()) {
+          showToast("🔐 Сначала зарегистрируйтесь или войдите.");
+          return;
+        }
         modal.classList.remove("is-open");
         modal.setAttribute("aria-hidden","true");
         document.body.style.overflow = "";
@@ -3137,18 +3227,54 @@
         if (open) closeModal(open);
       });
 
-      // Login open
-      openLoginBtn.addEventListener("click", ()=>openModal(getModalByKey("login")));
+      // Login / Register
+      openLoginBtn.addEventListener("click", ()=>{
+        openModal(getModalByKey("login"));
+        renderAuthMode(accountState ? "login" : "register");
+      });
+
+      showRegisterBtn?.addEventListener("click", ()=>renderAuthMode("register"));
+      showLoginBtn?.addEventListener("click", ()=>renderAuthMode("login"));
+
+      registerForm?.addEventListener("submit",(e)=>{
+        e.preventDefault();
+        const name = (regName.value || "").trim();
+        const phone = normalizePhone(regPhone.value || "");
+        const pass = (regPass.value || "").trim();
+        if (!name || !phone || pass.length < 4){
+          showToast("⚠️ Заполните ФИО, телефон и пароль (мин. 4 символа).");
+          return;
+        }
+        accountState = { name, phone, pass, createdAt: Date.now() };
+        sessionState = { loggedIn: true, phone };
+        saveAccount();
+        saveSession();
+        updateHeaderAuthState();
+        showToast("✅ Учетная запись создана.");
+        closeModal(getModalByKey("login"));
+      });
 
       loginForm.addEventListener("submit",(e)=>{
         e.preventDefault();
-        const phone = document.getElementById("loginPhone").value.trim();
-        const pass = document.getElementById("loginPass").value.trim();
+        const phone = normalizePhone(document.getElementById("loginPhone").value || "");
+        const pass = (document.getElementById("loginPass").value || "").trim();
         if (!phone || !pass){
           showToast("Заполните телефон и пароль.");
           return;
         }
-        showToast("Демо-вход выполнен.");
+        if (!accountState){
+          showToast("⚠️ Сначала пройдите регистрацию.");
+          renderAuthMode("register");
+          return;
+        }
+        if (accountState.phone !== phone || accountState.pass !== pass){
+          showToast("❌ Неверный телефон или пароль.");
+          return;
+        }
+        sessionState = { loggedIn: true, phone };
+        saveSession();
+        updateHeaderAuthState();
+        showToast(`✅ Добро пожаловать, ${accountState.name.split(" ")[0]}!`);
         closeModal(getModalByKey("login"));
       });
       smsLoginBtn.addEventListener("click", ()=>showToast("Войти по SMS: демо-режим."));
@@ -3610,6 +3736,7 @@ ${reminder.text}`;
       loadState();
       renderAll();
       startTelegramReminderWorker();
+      enforceAuthGate();
 
       /* =========================================================
          Кнопки hero "видео/чат" уже привязаны.
