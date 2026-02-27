@@ -1491,7 +1491,8 @@
     display: none !important;
   }
 
-  #openLoginBtn{
+  #openLoginBtn,
+  #openRegisterBtn{
     display: none !important;
   }
 
@@ -1563,41 +1564,39 @@
   /* FAB кнопка чуть меньше */
   .fab-main{ width: 56px !important; height: 56px !important; }
 }
-        /* ===== ШАПКА: сделать выше + упростить две кнопки ===== */
-
-/* Шапка чуть выше */
+        /* ===== ШАПКА: компактнее, но понятно для пожилых ===== */
 .site-header .header-inner{
-  min-height: 92px;      /* было ~78 */
-  padding: 16px 0;       /* было 12px 0 */
+  min-height: 74px;
+  padding: 10px 0;
 }
 
-/* Кнопки "Крупнее" и "Упрощённо" — проще и выше */
 #toggleA11yBtn,
-#toggleSimpleBtn{
-  min-height: 58px;      /* выше */
-  padding: 14px 18px;    /* удобнее */
-  font-size: 0.98rem;    /* чуть крупнее */
-  box-shadow: none;      /* проще (без сильной тени) */
-  border-width: 2px;     /* читаемее */
+#toggleSimpleBtn,
+#openRegisterBtn{
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  box-shadow: none;
+  border-width: 2px;
 }
 
-/* Чтобы в шапке выглядело ровнее */
 .header-actions{
   align-items: center;
+  gap: 8px;
 }
 
-/* На телефоне — тоже чуть выше, но компактно */
 @media (max-width: 860px){
   .site-header .header-inner{
-    min-height: 86px;
-    padding: 14px 0;
+    min-height: 68px;
+    padding: 8px 0;
   }
 
   #toggleA11yBtn,
-  #toggleSimpleBtn{
-    min-height: 52px;
-    padding: 12px 14px;
-    font-size: 0.92rem;
+  #toggleSimpleBtn,
+  #openRegisterBtn{
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
   }
 }
         .brand__icon--img{
@@ -1701,15 +1700,18 @@
                 <button class="icon-btn" type="button" id="openLoginBtn" aria-label="Войти">
                     <i class="fa-solid fa-user"></i>
                 </button>
+                <button class="btn btn-ghost" type="button" id="openRegisterBtn" aria-label="Регистрация">
+                    Регистрация
+                </button>
 
                 <!-- Режим крупного текста (условная "версия для слабовидящих") -->
-                <button class="btn btn-soft" type="button" id="toggleA11yBtn" aria-pressed="false" title="Крупнее и контрастнее">
-                     Крупнее
+                <button class="btn btn-soft" type="button" id="toggleA11yBtn" aria-pressed="false" title="Крупный и контрастный режим">
+                     Крупно
                 </button>
 
                 <!-- Упрощённый режим -->
                 <button class="btn btn-teal" type="button" id="toggleSimpleBtn" aria-pressed="false" title="Оставить только самое важное">
-                     Упрощённо
+                     Упрощено
                 </button>
             </div>
         </div>
@@ -1772,6 +1774,12 @@
                         <span class="quick-tile__icon"><i class="fa-solid fa-video"></i></span>
                         <span class="quick-tile__title"> Видеозвонок</span>
                         <span class="quick-tile__meta">Демо-режим звонка</span>
+                    </button>
+
+                    <button class="quick-tile" type="button" id="resetPrepFromHero">
+                        <span class="quick-tile__icon"><i class="fa-solid fa-rotate-left"></i></span>
+                        <span class="quick-tile__title"> Сбросить процесс</span>
+                        <span class="quick-tile__meta">Начать путь подготовки заново</span>
                     </button>
 
                     <button class="quick-tile" type="button" data-scroll-to="#faq">
@@ -1900,7 +1908,10 @@
 
                         <div class="side-footer">
                             <span id="checkCount">0/0 отмечено</span>
-                            <button class="tiny-link" type="button" id="resetChecklistBtn">Сбросить</button>
+                            <div style="display:flex; gap:10px;">
+                                <button class="tiny-link" type="button" id="resetChecklistBtn">Сброс чек-листа</button>
+                                <button class="tiny-link" type="button" id="resetPrepBtn">Сбросить путь</button>
+                            </div>
                         </div>
                     </aside>
                 </div>
@@ -2219,6 +2230,52 @@
             </div>
         </div>
     </section>
+
+    <section class="section" id="medical-logic" style="padding-top:0;">
+        <div class="container">
+            <div class="card" style="padding:18px;border-radius:24px;display:grid;gap:16px;">
+                <div class="section-head" style="margin-bottom:0;">
+                    <div>
+                        <h2 class="section-title" style="font-size:1.6rem;">Медицинская логика и безопасность</h2>
+                        <p class="section-lead">Добавили клинический чек-лист и демо-калькулятор ИОЛ, чтобы врачу и пациенту проще сверять готовность.</p>
+                    </div>
+                </div>
+                <div class="checklist" id="safetyChecklist" style="display:grid;gap:10px;"></div>
+                <div class="side-footer" style="justify-content:flex-start; gap:12px;">
+                    <span id="safetyCount">0/0 отмечено</span>
+                    <button class="tiny-link" type="button" id="resetSafetyChecklistBtn">Сбросить мед. чек-лист</button>
+                </div>
+                <div class="card" style="padding:14px;border-radius:18px;">
+                    <h3 style="margin:0 0 8px;">Калькулятор ИОЛ (демо-оценка)</h3>
+                    <p class="note" style="margin-top:0;">Предварительная оценка мощности линзы. Финальное решение принимает офтальмохирург.</p>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+                        <div class="field"><label for="iolAL">AL (мм)</label><input id="iolAL" type="number" step="0.01" placeholder="23.50" /></div>
+                        <div class="field"><label for="iolK">K средняя (D)</label><input id="iolK" type="number" step="0.01" placeholder="43.25" /></div>
+                        <div class="field"><label for="iolAconst">A-constant</label><input id="iolAconst" type="number" step="0.01" placeholder="118.4" /></div>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+                        <button class="btn btn-teal" type="button" id="calcIolBtn">Рассчитать ИОЛ</button>
+                        <strong id="iolResult">Результат: —</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="workflow" style="padding-top:0;">
+        <div class="container">
+            <div class="card" style="padding:18px;border-radius:24px;display:grid;gap:12px;">
+                <h2 class="section-title" style="font-size:1.6rem;">Меньше бумажной волокиты и работа при плохой связи</h2>
+                <p class="section-lead">Формы для клиники и родственника теперь сохраняются в очередь, если нет интернета. После восстановления связи они дозагружаются автоматически.</p>
+                <div class="card" style="padding:12px;border-radius:16px;">
+                    <div style="font-weight:900;">Статус связи: <span id="networkBadge">Проверка...</span></div>
+                    <div style="margin-top:6px;">Отложенные отправки: <strong id="syncQueueCount">0</strong></div>
+                    <button class="btn btn-soft" id="syncNowBtn" type="button" style="margin-top:10px;">Дозагрузить данные сейчас</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </main>
 
 <!-- =========================================================
@@ -2253,9 +2310,9 @@
 <!-- =========================================================
      ПАНИКА: фиксированная кнопка + модалка
      ========================================================= -->
-<a class="panic-fixed" href="tel:+78001234567" aria-label="Срочная помощь">
+<button class="panic-fixed" type="button" id="panicBtn" aria-label="Срочная помощь">
      Срочная помощь
-</a>
+</button>
 
 <!-- =========================================================
      FAB: быстрые действия (звонок / чат / напоминания / видеозвонок)
@@ -2300,7 +2357,7 @@
         <div class="modal__head">
             <div>
                 <h3 class="modal__title" id="loginTitle">Вход</h3>
-                <p class="modal__sub">Демо-форма. Для входа введите телефон и пароль.</p>
+                <p class="modal__sub">Введите телефон и пароль. Если аккаунта нет — зарегистрируйтесь.</p>
             </div>
             <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
                 <i class="fa-solid fa-xmark"></i>
@@ -2320,6 +2377,47 @@
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> Войти
                 </button>
                 <button class="btn btn-soft" type="button" id="smsLoginBtn">Войти по SMS</button>
+                <button class="btn btn-ghost" type="button" data-open-modal="register">Регистрация</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Регистрация
+     ========================================================= -->
+<div class="modal" id="registerModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
+    <div class="modal__dialog">
+        <div class="modal__head">
+            <div>
+                <h3 class="modal__title" id="registerTitle">Регистрация</h3>
+                <p class="modal__sub">Создайте аккаунт: имя, телефон и пароль.</p>
+            </div>
+            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal__body">
+            <form id="registerForm" style="display:grid; gap:12px;" novalidate>
+                <div class="field">
+                    <label for="registerName">Имя</label>
+                    <input id="registerName" type="text" placeholder="Как к вам обращаться" required />
+                </div>
+                <div class="field">
+                    <label for="registerPhone">Телефон</label>
+                    <input id="registerPhone" type="tel" placeholder="+7 (___) ___-__-__" required />
+                </div>
+                <div class="field">
+                    <label for="registerPass">Пароль</label>
+                    <input id="registerPass" type="password" placeholder="Минимум 6 символов" required />
+                </div>
+                <div class="field">
+                    <label for="registerPassConfirm">Подтвердите пароль</label>
+                    <input id="registerPassConfirm" type="password" placeholder="Повторите пароль" required />
+                </div>
+                <button class="btn btn-teal" type="submit">
+                    <i class="fa-solid fa-user-plus"></i> Зарегистрироваться
+                </button>
             </form>
         </div>
     </div>
@@ -2495,7 +2593,10 @@
         checklist: "of_checklist_v2",
         mood: "of_mood_v1",
         a11y: "of_a11y_v1",
-        simple: "of_simple_v1"
+        simple: "of_simple_v1",
+        users: "of_users_v1",
+        safety: "of_safety_v1",
+        queue: "of_sync_queue_v1"
       };
 
       /* ------------------------------
@@ -2588,8 +2689,19 @@
       const checklistEl = document.getElementById("checklist");
       const checkCountEl = document.getElementById("checkCount");
       const resetChecklistBtn = document.getElementById("resetChecklistBtn");
+      const resetPrepBtn = document.getElementById("resetPrepBtn");
 
       const downloadMemoBtn = document.getElementById("downloadMemoBtn");
+      const panicBtn = document.getElementById("panicBtn");
+
+      const safetyChecklistEl = document.getElementById("safetyChecklist");
+      const safetyCountEl = document.getElementById("safetyCount");
+      const resetSafetyChecklistBtn = document.getElementById("resetSafetyChecklistBtn");
+      const calcIolBtn = document.getElementById("calcIolBtn");
+      const iolResult = document.getElementById("iolResult");
+      const networkBadge = document.getElementById("networkBadge");
+      const syncQueueCount = document.getElementById("syncQueueCount");
+      const syncNowBtn = document.getElementById("syncNowBtn");
 
       // Mood
       const moodMsg = document.getElementById("moodMsg");
@@ -2607,6 +2719,7 @@
 
       const openChatFromHero = document.getElementById("openChatFromHero");
       const openVideoFromHero = document.getElementById("openVideoFromHero");
+      const resetPrepFromHero = document.getElementById("resetPrepFromHero");
 
       // FAB
       const fab = document.getElementById("fab");
@@ -2617,8 +2730,10 @@
 
       // Modals
       const openLoginBtn = document.getElementById("openLoginBtn");
+      const openRegisterBtn = document.getElementById("openRegisterBtn");
       const loginForm = document.getElementById("loginForm");
       const smsLoginBtn = document.getElementById("smsLoginBtn");
+      const registerForm = document.getElementById("registerForm");
 
       const clinicForm = document.getElementById("clinicForm");
       const relativeForm = document.getElementById("relativeForm");
@@ -2628,6 +2743,15 @@
          ------------------------------ */
       let prepState = { completedCount: 1, previewIndex: 1 }; // приятный старт
       let checklistState = {}; // { stepId: [true/false...] }
+      const safetyItems = [
+        "Подтверждены аллергии и реакция на препараты",
+        "Проверены антикоагулянты и схема отмены/продолжения",
+        "Пациенту объяснён режим питания перед операцией",
+        "Сверены результаты анализов и дата их актуальности",
+        "Подписано информированное согласие"
+      ];
+      let safetyState = safetyItems.map(()=>false);
+      let pendingQueue = [];
 
       function safeParse(v, fallback){
         try{ return JSON.parse(v) ?? fallback; }catch{ return fallback; }
@@ -2650,17 +2774,30 @@
           moodButtons.forEach(b => b.classList.toggle("is-selected", b.dataset.mood===savedMood));
         }
 
-        const a11yOn = localStorage.getItem(LS.a11y)==="1";
-        document.body.classList.toggle("a11y-mode", a11yOn);
-        toggleA11yBtn.setAttribute("aria-pressed", String(a11yOn));
+        const savedSafety = safeParse(localStorage.getItem(LS.safety), null);
+        if (Array.isArray(savedSafety) && savedSafety.length===safetyItems.length){
+          safetyState = savedSafety.map(Boolean);
+        }
 
-        const simpleOn = localStorage.getItem(LS.simple)==="1";
+        const savedQueue = safeParse(localStorage.getItem(LS.queue), null);
+        if (Array.isArray(savedQueue)) pendingQueue = savedQueue;
+
+        const a11yLS = localStorage.getItem(LS.a11y);
+        const simpleLS = localStorage.getItem(LS.simple);
+        const a11yOn = a11yLS===null ? true : a11yLS==="1";
+        const simpleOn = simpleLS===null ? true : simpleLS==="1";
+        document.body.classList.toggle("a11y-mode", a11yOn);
         document.body.classList.toggle("simple-mode", simpleOn);
+        toggleA11yBtn.setAttribute("aria-pressed", String(a11yOn));
         toggleSimpleBtn.setAttribute("aria-pressed", String(simpleOn));
+        if (a11yLS===null) localStorage.setItem(LS.a11y, "1");
+        if (simpleLS===null) localStorage.setItem(LS.simple, "1");
       }
 
       function savePrep(){ localStorage.setItem(LS.prep, JSON.stringify(prepState)); }
       function saveChecklist(){ localStorage.setItem(LS.checklist, JSON.stringify(checklistState)); }
+      function saveSafety(){ localStorage.setItem(LS.safety, JSON.stringify(safetyState)); }
+      function saveQueue(){ localStorage.setItem(LS.queue, JSON.stringify(pendingQueue)); }
 
       /* ------------------------------
          TOAST
@@ -2848,8 +2985,21 @@
         checklistState[step.id] = step.checklist.map(()=>false);
         saveChecklist();
         renderChecklist(step);
-        showToast("Чек-лист сброшен.");
+        showToast("Чек-лист шага сброшен.");
       });
+
+      function resetPrepFlow(){
+        prepState = { completedCount: 0, previewIndex: 0 };
+        checklistState = {};
+        localStorage.removeItem(LS.mood);
+        moodButtons.forEach((b)=>b.classList.remove("is-selected"));
+        savePrep();
+        saveChecklist();
+        renderAll();
+        showToast("Путь к операции сброшен. Начинаем с первого шага.");
+      }
+
+      resetPrepBtn?.addEventListener("click", resetPrepFlow);
 
       completeStepBtn.addEventListener("click", ()=>{
         if (prepState.completedCount >= steps.length){
@@ -2872,10 +3022,108 @@
         showToast("Открываем помощь: можно позвонить или написать в чат.");
       });
 
+
+      function renderSafetyChecklist(){
+        if (!safetyChecklistEl) return;
+        safetyChecklistEl.innerHTML = "";
+        let done = 0;
+        safetyItems.forEach((text, i)=>{
+          const checked = !!safetyState[i];
+          if (checked) done += 1;
+          const row = document.createElement("div");
+          row.className = "check-item" + (checked ? " is-checked" : "");
+          row.innerHTML = `<input type="checkbox" id="safe_${i}" data-i="${i}" ${checked?"checked":""} /><label for="safe_${i}">${text}</label>`;
+          safetyChecklistEl.appendChild(row);
+        });
+        safetyCountEl.textContent = `${done}/${safetyItems.length} отмечено`;
+      }
+
+      safetyChecklistEl?.addEventListener("change", (e)=>{
+        const input = e.target.closest('input[type="checkbox"]');
+        if (!input) return;
+        const i = Number(input.dataset.i);
+        safetyState[i] = input.checked;
+        saveSafety();
+        renderSafetyChecklist();
+      });
+
+      resetSafetyChecklistBtn?.addEventListener("click", ()=>{
+        safetyState = safetyItems.map(()=>false);
+        saveSafety();
+        renderSafetyChecklist();
+        showToast("Медицинский чек-лист сброшен.");
+      });
+
+      calcIolBtn?.addEventListener("click", ()=>{
+        const al = Number(document.getElementById("iolAL").value);
+        const k = Number(document.getElementById("iolK").value);
+        const aconst = Number(document.getElementById("iolAconst").value);
+        if (!al || !k || !aconst){
+          showToast("Заполните AL, K и A-constant.");
+          return;
+        }
+        const power = (aconst - 2.5 * al - 0.9 * k);
+        const rounded = Math.round(power * 2) / 2;
+        iolResult.textContent = `Результат: ${rounded.toFixed(1)} D (демо)`;
+      });
+
+      function dialEmergency(){
+        const phone = "+78001234567";
+        if (window.AndroidBridge && typeof window.AndroidBridge.dial === "function"){
+          window.AndroidBridge.dial(phone);
+        } else {
+          window.location.href = "tel:" + phone;
+        }
+      }
+      panicBtn?.addEventListener("click", dialEmergency);
+
+      function renderSyncStatus(){
+        const online = navigator.onLine;
+        networkBadge.textContent = online ? "онлайн" : "оффлайн";
+        networkBadge.style.color = online ? "#2AA9A3" : "#d9534f";
+        syncQueueCount.textContent = String(pendingQueue.length);
+      }
+
+      function queueOrSend(type, payload){
+        if (!navigator.onLine){
+          pendingQueue.push({ type, payload, ts: Date.now() });
+          saveQueue();
+          renderSyncStatus();
+          showToast("Нет сети. Данные сохранены и будут дозагружены позже.");
+          return false;
+        }
+        console.log("Отправлено:", type, payload);
+        return true;
+      }
+
+      function flushQueue(){
+        if (!navigator.onLine){
+          renderSyncStatus();
+          return;
+        }
+        if (!pendingQueue.length){
+          renderSyncStatus();
+          showToast("Очередь пуста.");
+          return;
+        }
+        pendingQueue.forEach((item)=>console.log("Дозагрузка:", item.type, item.payload));
+        pendingQueue = [];
+        saveQueue();
+        renderSyncStatus();
+        showToast("Данные дозагружены.");
+      }
+
+      syncNowBtn?.addEventListener("click", flushQueue);
+      window.addEventListener("online", flushQueue);
+      window.addEventListener("online", renderSyncStatus);
+      window.addEventListener("offline", renderSyncStatus);
+
       function renderAll(){
         renderProgress();
         renderTimeline();
         renderDetail();
+        renderSafetyChecklist();
+        renderSyncStatus();
       }
 
       /* =========================================================
@@ -2985,12 +3233,26 @@
       function getModalByKey(key){
         const map = {
           login: document.getElementById("loginModal"),
+          register: document.getElementById("registerModal"),
           panic: document.getElementById("panicModal"),
           video: document.getElementById("videoModal"),
           clinic: document.getElementById("clinicModal"),
           relative: document.getElementById("relativeModal")
         };
         return map[key] || null;
+      }
+
+      function normalizePhone(phone){
+        return String(phone || "").replace(/\D/g, "");
+      }
+
+      function readUsers(){
+        const users = safeParse(localStorage.getItem(LS.users), []);
+        return Array.isArray(users) ? users : [];
+      }
+
+      function saveUsers(users){
+        localStorage.setItem(LS.users, JSON.stringify(users));
       }
 
       function openModal(modal){
@@ -3040,8 +3302,9 @@
         if (open) closeModal(open);
       });
 
-      // Login open
-      openLoginBtn.addEventListener("click", ()=>openModal(getModalByKey("login")));
+      // Login / Register open
+      openLoginBtn?.addEventListener("click", ()=>openModal(getModalByKey("login")));
+      openRegisterBtn?.addEventListener("click", ()=>openModal(getModalByKey("register")));
 
       loginForm.addEventListener("submit",(e)=>{
         e.preventDefault();
@@ -3051,10 +3314,66 @@
           showToast("Заполните телефон и пароль.");
           return;
         }
-        showToast("Демо-вход выполнен.");
+        const phoneDigits = normalizePhone(phone);
+        const users = readUsers();
+        const currentUser = users.find((u)=>u.phone===phoneDigits && u.pass===pass);
+
+        if (!currentUser){
+          showToast("Пользователь не найден. Сначала зарегистрируйтесь.");
+          return;
+        }
+
+        showToast(`Вход выполнен. Добро пожаловать, ${currentUser.name}!`);
         closeModal(getModalByKey("login"));
+        loginForm.reset();
       });
       smsLoginBtn.addEventListener("click", ()=>showToast("Войти по SMS: демо-режим."));
+
+      registerForm.addEventListener("submit", (e)=>{
+        e.preventDefault();
+        const name = document.getElementById("registerName").value.trim();
+        const phone = document.getElementById("registerPhone").value.trim();
+        const pass = document.getElementById("registerPass").value.trim();
+        const passConfirm = document.getElementById("registerPassConfirm").value.trim();
+        const phoneDigits = normalizePhone(phone);
+
+        if (!name || !phone || !pass || !passConfirm){
+          showToast("Заполните все поля регистрации.");
+          return;
+        }
+
+        if (phoneDigits.length < 11){
+          showToast("Введите корректный номер телефона.");
+          return;
+        }
+
+        if (pass.length < 6){
+          showToast("Пароль должен быть не короче 6 символов.");
+          return;
+        }
+
+        if (pass !== passConfirm){
+          showToast("Пароли не совпадают.");
+          return;
+        }
+
+        const users = readUsers();
+        const alreadyExists = users.some((u)=>u.phone===phoneDigits);
+        if (alreadyExists){
+          showToast("Пользователь с этим номером уже зарегистрирован.");
+          return;
+        }
+
+        users.push({ name, phone: phoneDigits, pass });
+        saveUsers(users);
+        showToast("Регистрация успешна. Теперь можно войти.");
+
+        document.getElementById("loginPhone").value = phone;
+        document.getElementById("loginPass").value = "";
+        registerForm.reset();
+        closeModal(getModalByKey("register"));
+        openModal(getModalByKey("login"));
+      });
 
       /* =========================================================
          КЛИНИКА: валидация ИНН/СНИЛС + отправка
@@ -3150,8 +3469,10 @@
           firstBad?.focus();
           return;
         }
-        console.log("Заявка клиники/врача:", res.data);
-        alert("Заявка отправлена! Наш менеджер свяжется с вами в ближайшее время");
+        const sent = queueOrSend("clinic", res.data);
+        if (sent){
+          showToast("Заявка отправлена. Менеджер свяжется с вами.");
+        }
         clinicForm.reset();
         closeModal(getModalByKey("clinic"));
       });
@@ -3178,8 +3499,10 @@
           return;
         }
         setRelErr("");
-        console.log("Приглашение родственнику:", { phone: val });
-        showToast("Приглашение отправлено (демо-режим).");
+        const sent = queueOrSend("relative", { phone: val });
+        if (sent){
+          showToast("Приглашение отправлено.");
+        }
         closeModal(getModalByKey("relative"));
         relativeForm.reset();
       });
@@ -3215,6 +3538,7 @@
 
       fabVideoBtn.addEventListener("click", ()=>{ toggleFab(false); openModal(getModalByKey("video")); });
       openVideoFromHero.addEventListener("click", ()=>openModal(getModalByKey("video")));
+      resetPrepFromHero?.addEventListener("click", resetPrepFlow);
 
       fabReminderBtn.addEventListener("click", ()=>{ toggleFab(false); showToast("Напоминания: демо. Можно подключить SMS/push."); });
 
@@ -3384,100 +3708,6 @@
       });
 
     })();
-// ===== Срочная помощь: открыть модалку =====
-const panicBtn = document.getElementById("panicBtn");
-const panicModal = document.getElementById("panicModal");
-
-let lastFocus = null;
-
-function openModal(modal){
-  if (!modal) return;
-  lastFocus = document.activeElement;
-  modal.classList.add("is-open");
-  modal.setAttribute("aria-hidden","false");
-  document.body.style.overflow = "hidden";
-  setTimeout(()=> modal.querySelector("a,button,input")?.focus(), 10);
-}
-
-function closeModal(modal){
-  if (!modal) return;
-  modal.classList.remove("is-open");
-  modal.setAttribute("aria-hidden","true");
-  document.body.style.overflow = "";
-  lastFocus?.focus?.();
-}
-
-panicBtn?.addEventListener("click", ()=> openModal(panicModal));
-
-// закрытие по кнопкам data-close-modal
-document.addEventListener("click",(e)=>{
-  const closer = e.target.closest("[data-close-modal]");
-  if (closer){
-    const modal = closer.closest(".modal");
-    closeModal(modal);
-  }
-});
-
-// закрытие по клику на фон
-panicModal?.addEventListener("click",(e)=>{
-  if (e.target === panicModal) closeModal(panicModal);
-});
-
-// закрытие по ESC
-document.addEventListener("keydown",(e)=>{
-  if (e.key === "Escape" && panicModal?.classList.contains("is-open")){
-    closeModal(panicModal);
-  }
-const panicBtn = document.getElementById("panicBtn");
-
-panicBtn?.addEventListener("click", () => {
-  const phone = "+78001234567";
-
-  // если открыто в Android WebView — вызываем мост
-  if (window.AndroidBridge && typeof window.AndroidBridge.dial === "function") {
-    window.AndroidBridge.dial(phone);
-    return;
-  }
-
-  // запасной вариант для обычного браузера
-  window.location.href = "tel:" + phone;
-});});
 </script>
-<button class="panic-fixed" type="button" id="panicBtn" aria-label="Срочная помощь">
-     Срочная помощь
-</button>
-<div class="modal" id="panicModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="panicTitle">
-    <div class="modal__dialog">
-        <div class="modal__head">
-            <div>
-                <h3 class="modal__title" id="panicTitle"> Срочная помощь</h3>
-                <p class="modal__sub">Если вам плохо, немедленно позвоните фельдшеру.</p>
-            </div>
-            <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-
-        <div class="modal__body">
-            <div class="card" style="padding:16px;border-radius:24px;border:1px solid var(--line);box-shadow:var(--shadow-sm);">
-                <div style="font-size:1.6rem;font-weight:900; letter-spacing:-.02em;">
-                    +7 800 123-45-67
-                </div>
-
-                <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-                    <a class="btn btn-teal" href="tel:+78001234567" style="text-decoration:none;">
-                        <i class="fa-solid fa-phone"></i> Позвонить сейчас
-                    </a>
-
-                    <button class="btn btn-ghost" type="button" data-close-modal>Закрыть</button>
-                </div>
-
-                <p style="margin:12px 0 0; color:var(--muted); font-weight:900;">
-                    Если состояние резко ухудшается — обратитесь за неотложной медицинской помощью.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>
